@@ -6,11 +6,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.regex.MatchResult;
 
 public class InputStream {
+    private static Pattern StringSplitterator = Pattern.compile("\"([^\"]*)\"|'([^']*)'|[^\\s]+");
+
     private Stream<SToken> delegate;
 
     private InputStream(Stream<SToken> delegate) {
@@ -44,8 +48,8 @@ public class InputStream {
      * Remove any characters which match @Link{Token#COMMENT_PATTERN}
      */
     public InputStream unComment() {
-        delegate = delegate.map(x -> x.content().contains(Token.COMMENT) ?
-                x.setContent(x.content().replaceAll(Token.COMMENT_PATTERN, "")) : x);
+        delegate = delegate.map(x -> Token.COMMENT.matcher(x.content()).find() ?
+                x.setContent(Token.COMMENT_PATTERN.matcher(x.content()).replaceAll("")) : x);
         return this;
     }
 
@@ -55,7 +59,10 @@ public class InputStream {
     public InputStream splitterate() {
         delegate = delegate
                 .map(x -> {
-                    String[] lexemes = x.content().split("\\s+");
+                    String[] lexemes = StringSplitterator.matcher(x.content())
+                            .results()
+                            .map(MatchResult::group)
+                            .toArray(String[]::new);
                     return IntStream
                             .range(0, lexemes.length)
                             .mapToObj(y -> new SToken(lexemes[y], x.line(), y))
