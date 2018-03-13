@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import java.util.regex.MatchResult;
 
 public class InputStream {
-    private static Pattern StringSplitterator = Pattern.compile("\"([^\"]*)\"|'([^']*)'|[^\\s]+");
+    private static Pattern StringSplitterator = Pattern.compile("\"([^\"]*)\"|'([^'].')'|[^\\s]+");
 
     private Stream<SToken> delegate;
 

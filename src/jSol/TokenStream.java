@@ -1,12 +1,21 @@
 package jSol;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TokenStream {
     private static String TOKEN_FORMAT = "%s(%s) ";
     private static String INVALID_TOKEN_MESSAGE = "\n\nInvalid token '%s' on line %d in position %d.";
+    private static List<String> illegalKeywords = new ArrayList<>() {{
+        add("\\.");
+        add("fun");
+        add("cofun");
+        add("type");
+        add("var");
+    }};
 
     private Stream<Token> delegate;
 
@@ -23,6 +32,24 @@ public class TokenStream {
                 .map(x -> Arrays.stream(Token.values())
                         .filter(a -> a.matches(x.content()))
                         .map(a -> a.copyOf(x))
+                        .map(a -> {
+                            if (a == Token.ID) {
+                                long matches = illegalKeywords.stream()
+                                        .filter(y -> x.content().matches(y))
+                                        .count();
+                                if (matches > 0) {
+                                    return Token.INVALID;
+                                }
+                            } else if (a == Token.REFERENCE) {
+                                long matches = illegalKeywords.stream()
+                                        .filter(y -> x.content().matches("%" + y))
+                                        .count();
+                                if (matches > 0) {
+                                    return Token.INVALID;
+                                }
+                            }
+                            return a;
+                        })
                         .findFirst()
                         .orElse(Token.INVALID).copyOf(x)));
     }
