@@ -14,9 +14,14 @@ public class Parser {
 
     public static ParseNode fromTokenSTream(Stream<Token> tokens) {
         ParseNode start = new ParseNode(Program, null, -1, -1);
-        Stack<Term> stack = new Stack<>();
-        tokens.forEach(x -> {
-            while()
+        Stack<ParseNode> stack = new Stack<>();
+        stack.push(start);
+        tokens.forEach(curr -> {
+            while(!stack.peek().getType().isEqualTo(curr)) {
+                ParseNode top = stack.pop();
+                Term[] productionForTop = 
+            }
+            // do thing when stack(0) == input(0)
         });
         return start;
     }
