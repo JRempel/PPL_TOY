@@ -22,7 +22,9 @@ public enum Token {
     REFERENCE("%[-+%]|%\\.[^0-9].*|%[-+][^.0-9].*|%[^-+.:%0-9\'\"].*"),
     END("\\."),
     ID("[-+%]|\\.[^0-9].*|[-+][^.0-9].*|[^-+.:%0-9\'\"].*"),
-    INVALID("");
+    INVALID(""),
+    // End of Program
+    EOP("");
 
     public static Pattern COMMENT = Pattern.compile("//");
     public static Pattern COMMENT_PATTERN = Pattern.compile("//.*");
