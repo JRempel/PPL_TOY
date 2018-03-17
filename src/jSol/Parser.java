@@ -60,17 +60,22 @@ public class Parser {
                 for (int i = top.getChildren().length - 1; i >= 0; i--) {
                     stack.push(top.getChildren()[i]);
                 }
-                
+
                 while (!stack.empty() && stack.peek().getType() == Epsilon) {
                     stack.pop();
                 }
             }
 
             if (!stack.empty()) {
-                ParseNode p = stack.pop();
-                p.setContent(curr.content());
-                p.setLine(curr.line());
-                p.setPosition(curr.position());
+                if (stack.peek().getType().isEqualTo(curr)) {
+                    ParseNode p = stack.pop();
+                    p.setContent(curr.content());
+                    p.setLine(curr.line());
+                    p.setPosition(curr.position());
+                } else {
+                    System.out.println(String.format(INVALID_TOKEN_MESSAGE, curr.content(), curr.line(), curr.position()));
+                    System.exit(1);
+                }
             }
         });
         return start;

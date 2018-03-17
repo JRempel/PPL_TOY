@@ -6,7 +6,6 @@ public class Scanner {
                 .unComment()
                 .splitterate()
                 .tokenize()
-//                .reportInvalid()
-                ;
+                .reportInvalid();
     }
 }
