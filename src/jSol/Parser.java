@@ -23,32 +23,33 @@ public class Parser {
         Stack<ParseNode> stack = new Stack<>();
         stack.push(start);
         tokens.forEach(curr -> {
-            int a = 2;
-            while(!stack.peek().getType().isEqualTo(curr) && !(stack.peek().getType() == Epsilon)) {
+            while (!stack.empty() && !stack.peek().getType().isEqualTo(curr) && !(stack.peek().getType() == Epsilon)) {
                 ParseNode top = stack.pop();
                 Term[] productionForTop = Predict.getExpResult(top.getType(), curr);
 
-                if (productionForTop == null){
+                if (productionForTop == null) {
                     System.out.println(String.format(INVALID_TOKEN_MESSAGE, curr.content(), curr.line(), curr.position()));
                     System.exit(1);
                 }
 
                 top.setChildren(Arrays.stream(productionForTop)
-                        .map( t -> {
-                            ParseNode p = new ParseNode(t,null,-1,-1);
-                            return p;
-                        })
+                        .map(t -> new ParseNode(t, null, -1, -1))
                         .toArray(ParseNode[]::new));
 
-                for (int i = top.getChildren().length-1; i >= 0; i--) {
+                for (int i = top.getChildren().length - 1; i >= 0; i--) {
                     stack.push(top.getChildren()[i]);
                 }
+                    while (!stack.empty() && stack.peek().getType() == Epsilon) {
+                        stack.pop();
+                    }
             }
 
-            ParseNode p = stack.pop();
-            p.setContent(curr.content());
-            p.setLine(curr.line());
-            p.setPosition(curr.position());
+            if (!stack.empty()){
+                ParseNode p = stack.pop();
+                p.setContent(curr.content());
+                p.setLine(curr.line());
+                p.setPosition(curr.position());
+            }
 
             // do thing when stack(0) == input(0)
         });
