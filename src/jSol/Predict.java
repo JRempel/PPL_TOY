@@ -95,6 +95,7 @@ public class Predict {
     }};
 
     public static Term[] getExpResult(Term lhs, Token input) {
+        System.out.println(lhs + " " + input);
         return productions.get(lhs).get(input);
     }
 }

@@ -8,6 +8,7 @@ public class ParseNode {
     private ParseNode[] children;
 
     public ParseNode(Term type, String content, int line, int position) {
+        this.type = type;
         this.content = content;
         this.line = line;
         this.position = position;

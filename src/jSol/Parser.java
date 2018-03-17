@@ -5,6 +5,7 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static jSol.Term.Epsilon;
 import static jSol.Term.Program;
 
 public class Parser {
@@ -22,7 +23,8 @@ public class Parser {
         Stack<ParseNode> stack = new Stack<>();
         stack.push(start);
         tokens.forEach(curr -> {
-            while(!stack.peek().getType().isEqualTo(curr)) {
+            int a = 2;
+            while(!stack.peek().getType().isEqualTo(curr) && !(stack.peek().getType() == Epsilon)) {
                 ParseNode top = stack.pop();
                 Term[] productionForTop = Predict.getExpResult(top.getType(), curr);
 
