@@ -18,6 +18,18 @@ public class ParseNode {
         return type;
     }
 
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setLine(int line) {
+        this.line = line;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
     public String getContent() {
         return content;
     }
