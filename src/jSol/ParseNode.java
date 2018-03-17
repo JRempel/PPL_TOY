@@ -1,5 +1,9 @@
 package jSol;
 
+import java.util.Collections;
+
+import static jSol.Term.Epsilon;
+
 public class ParseNode {
     private Term type;
     private String content;
@@ -51,5 +55,20 @@ public class ParseNode {
         this.children = children;
     }
 
-    // TODO: DFS Print
+    public ParseNode print() {
+        print(this, 0);
+        return this;
+    }
+
+    private static void print(ParseNode tree, int tabs) {
+        System.out.println(String.join("", Collections.nCopies(tabs, "  ")) +
+                tree.getType() +
+                (tree.getContent() != null ? "(" + tree.getContent() + ")" : ""));
+
+        for (ParseNode p : tree.getChildren()) {
+            if (p.getType() != Epsilon) {
+                print(p, tabs + 1);
+            }
+        }
+    }
 }

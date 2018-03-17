@@ -1,12 +1,7 @@
 package jSol;
 
-import java.awt.*;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Stack;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static jSol.Term.Epsilon;
@@ -17,26 +12,10 @@ public class Parser {
     private static String INVALID_TOKEN_MESSAGE = "\n\nCannot find expression to match '%s' on line %d in position %d.";
 
     public static void main(String[] args) {
-        ParseNode tree = Scanner
-                .scan("./program.txt")
+        Scanner.scan("./program.txt")
                 .reportInvalid()
-                .toParseTree();
-
-        print2(tree, 0);
-
-    }
-
-    public static void print2(ParseNode tree, int tabs){
-
-
-        System.out.print(String.join("", Collections.nCopies(tabs,"  ")));
-        System.out.println(tree.getType() + (tree.getContent() != null ? "("+tree.getContent()+")": ""));
-
-        for (ParseNode p: tree.getChildren()){
-            if(p.getType() != Epsilon){
-                print2(p,tabs+1);
-            }
-        }
+                .toParseTree()
+                .print();
     }
 
     public static ParseNode fromTokenSTream(Stream<Token> tokens) {

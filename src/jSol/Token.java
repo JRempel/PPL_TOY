@@ -6,7 +6,7 @@ public enum Token {
     /**
      *IMPORTANT: Keep ID at the end because other tokens are a prefix for it.
      */
-    INT("[+-]?[0-9]+ |0x[0-9a-fA-F]+|0b[01]+"),
+    INT("[+-]?[0-9]+|0x[0-9a-fA-F]+|0b[01]+"),
     FLOAT("[+-]?([0-9]*\\.)?[0-9]+([Ee][+-]?[0-9]+)?"),
     CHAR("'[^\\\\']'|'\\\\.'"),
     STRING("\"([^\\\"]|\\.)*\""),
