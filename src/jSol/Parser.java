@@ -39,19 +39,18 @@ public class Parser {
                 for (int i = top.getChildren().length - 1; i >= 0; i--) {
                     stack.push(top.getChildren()[i]);
                 }
-                    while (!stack.empty() && stack.peek().getType() == Epsilon) {
-                        stack.pop();
-                    }
+                
+                while (!stack.empty() && stack.peek().getType() == Epsilon) {
+                    stack.pop();
+                }
             }
 
-            if (!stack.empty()){
+            if (!stack.empty()) {
                 ParseNode p = stack.pop();
                 p.setContent(curr.content());
                 p.setLine(curr.line());
                 p.setPosition(curr.position());
             }
-
-            // do thing when stack(0) == input(0)
         });
         return start;
     }
