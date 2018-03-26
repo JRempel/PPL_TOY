@@ -78,8 +78,8 @@ public class TokenStream {
                 .mapToInt(Integer::intValue);
     }
 
-    public ParseNode toParseTree() {
+    public ParseTree toParseTree() {
         delegate = Stream.concat(delegate, Stream.of(Token.EOP));
-        return Parser.fromTokenSTream(this.delegate);
+        return ParseTree.fromTokenSTream(this.delegate);
     }
 }
