@@ -1,0 +1,19 @@
+type vector x y .
+
+fun sqrt // x -- sqrt(x)
+    var x
+    fun go
+        dup dup x swap / + 2 /
+        dup rotl != %go ?
+    .
+    1 go
+.
+
+fun vector_len // vector(x, y) -- sqrt(x * x + y * y)
+    dup x dup * swap y dup * + sqrt
+.
+
+// Create the vector (3,4), calculate its length and print it to stdout.
+fun main
+    vector 3 x= 4 y= vector_len format "len(3,4) = " swap ++ putStr nl
+.

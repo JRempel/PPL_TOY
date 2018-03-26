@@ -2,7 +2,7 @@ package jSol;
 
 public class Compiler {
     public static void main(String[] args) {
-        compile("./program.txt");
+        compile("./fib.txt");
     }
 
     private static void compile(String path) {
@@ -13,9 +13,10 @@ public class Compiler {
                 .splitterate()
                 .tokenize()
                 .reportInvalid()
-                // Parser
+                //Parser
                 .toParseTree()
-                .print();
-                // To Bytecode
+                .print()
+                //To Bytecode
+                .toAST();
     }
 }

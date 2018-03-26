@@ -1,1 +1,0 @@
-fun(fun) id(fibonacci) fun(fun) id(fib) id(rotl) id(dup) int(0) id(=) lambdabegin([) id(drop) id(swap) id(drop) lambdaend(]) lambdabegin([) int(1) id(-) id(rotr) id(dup) id(rotl) id(+) id(fib) lambdaend(]) id(??) end(.) int(0) int(1) id(fib) end(.) 

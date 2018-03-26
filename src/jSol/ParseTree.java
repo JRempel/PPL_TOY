@@ -13,15 +13,11 @@ public class ParseTree {
 
     private Term type;
     private String content;
-    private int line;
-    private int position;
     private ParseTree[] children;
 
-    public ParseTree(Term type, String content, int line, int position) {
+    public ParseTree(Term type, String content) {
         this.type = type;
         this.content = content;
-        this.line = line;
-        this.position = position;
         this.children = new ParseTree[0];
     }
 
@@ -33,24 +29,8 @@ public class ParseTree {
         this.content = content;
     }
 
-    public void setLine(int line) {
-        this.line = line;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
     public String getContent() {
         return content;
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public int getPosition() {
-        return position;
     }
 
     public ParseTree[] getChildren() {
@@ -61,13 +41,8 @@ public class ParseTree {
         this.children = children;
     }
 
-    public ParseTree print() {
-        print(this, 0);
-        return this;
-    }
-
     public static ParseTree fromTokenSTream(Stream<Token> tokens) {
-        ParseTree start = new ParseTree(Program, null, -1, -1);
+        ParseTree start = new ParseTree(Program, null);
         Stack<ParseTree> stack = new Stack<>();
         stack.push(start);
         tokens.forEach(curr -> {
@@ -81,7 +56,7 @@ public class ParseTree {
                 }
 
                 top.setChildren(Arrays.stream(productionForTop)
-                        .map(t -> new ParseTree(t, null, -1, -1))
+                        .map(t -> new ParseTree(t, null))
                         .toArray(ParseTree[]::new));
 
                 for (int i = top.getChildren().length - 1; i >= 0; i--) {
@@ -97,8 +72,6 @@ public class ParseTree {
                 if (stack.peek().getType().isEqualTo(curr)) {
                     ParseTree p = stack.pop();
                     p.setContent(curr.content());
-                    p.setLine(curr.line());
-                    p.setPosition(curr.position());
                 } else {
                     System.out.println(String.format(INVALID_TOKEN_MESSAGE, curr.content(), curr.line(), curr.position()));
                     System.exit(1);
@@ -106,6 +79,12 @@ public class ParseTree {
             }
         });
         return start;
+    }
+
+    public ParseTree print() {
+        System.out.println("\n");
+        print(this, 0);
+        return this;
     }
 
     private static void print(ParseTree tree, int tabs) {
@@ -118,5 +97,9 @@ public class ParseTree {
                 print(p, tabs + 1);
             }
         }
+    }
+
+    public AbstractSyntaxTree toAST() {
+        return AbstractSyntaxTree.fromParseTree(this);
     }
 }

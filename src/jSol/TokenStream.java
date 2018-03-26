@@ -44,7 +44,7 @@ public class TokenStream {
                                 long matches = illegalKeywords.stream()
                                         .filter(y -> x.content().matches("%" + y))
                                         .count();
-                                if (matches > 0 || Token.ID.matches(x.content().substring(1))) {
+                                if (matches > 0 || !Token.ID.matches(x.content().substring(1))) {
                                     return Token.INVALID;
                                 }
                             }
