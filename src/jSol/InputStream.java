@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import java.util.regex.MatchResult;
 
 public class InputStream {
-    private static Pattern StringSplitterator = Pattern.compile("\"([^\"]*)\"|'([^'].')'|[^\\s]+");
+    private static Pattern StringSplitterator = Pattern.compile("\"([^\"]*)\"|'([^'].)'|[^\\s]+");
 
     private Stream<SToken> delegate;
 
@@ -32,7 +32,7 @@ public class InputStream {
     public static InputStream from(String filename) {
         try {
             List<String> input = Files
-                    .lines(Paths.get(filename), StandardCharsets.UTF_8)
+                    .lines(Paths.get(filename), StandardCharsets.US_ASCII)
                     .collect(Collectors.toList());
             Stream<SToken> stream = IntStream
                     .range(0, input.size())
