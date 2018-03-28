@@ -42,13 +42,13 @@ public class ParseTree {
     }
 
     public static ParseTree fromTokenSTream(Stream<Token> tokens) {
-        ParseTree start = new ParseTree(Program, null);
-        Stack<ParseTree> stack = new Stack<>();
+        var start = new ParseTree(Program, null);
+        var stack = new Stack<ParseTree>();
         stack.push(start);
         tokens.forEach(curr -> {
             while (!stack.empty() && !stack.peek().getType().isEqualTo(curr) && !(stack.peek().getType() == Epsilon)) {
-                ParseTree top = stack.pop();
-                Term[] productionForTop = Predict.getExpResult(top.getType(), curr);
+                var top = stack.pop();
+                var productionForTop = Predict.getExpResult(top.getType(), curr);
 
                 if (productionForTop == null) {
                     System.out.println(String.format(INVALID_TOKEN_MESSAGE, curr.content(), curr.line(), curr.position()));
@@ -70,7 +70,7 @@ public class ParseTree {
 
             if (!stack.empty()) {
                 if (stack.peek().getType().isEqualTo(curr)) {
-                    ParseTree p = stack.pop();
+                    var p = stack.pop();
                     p.setContent(curr.content());
                 } else {
                     System.out.println(String.format(INVALID_TOKEN_MESSAGE, curr.content(), curr.line(), curr.position()));
@@ -92,7 +92,7 @@ public class ParseTree {
                 tree.getType() +
                 (tree.getContent() != null ? "(" + tree.getContent() + ")" : ""));
 
-        for (ParseTree p : tree.getChildren()) {
+        for (var p : tree.getChildren()) {
             if (p.getType() != Epsilon) {
                 print(p, tabs + 1);
             }

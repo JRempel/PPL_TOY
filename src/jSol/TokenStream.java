@@ -34,14 +34,14 @@ public class TokenStream {
                         .map(a -> a.copyOf(x))
                         .map(a -> {
                             if (a == Token.ID) {
-                                long matches = illegalKeywords.stream()
+                                var matches = illegalKeywords.stream()
                                         .filter(y -> x.content().matches(y))
                                         .count();
                                 if (matches > 0) {
                                     return Token.INVALID;
                                 }
                             } else if (a == Token.REFERENCE) {
-                                long matches = illegalKeywords.stream()
+                                var matches = illegalKeywords.stream()
                                         .filter(y -> x.content().matches("%" + y))
                                         .count();
                                 if (matches > 0 || !Token.ID.matches(x.content().substring(1))) {

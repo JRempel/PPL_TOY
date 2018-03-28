@@ -31,10 +31,10 @@ public class InputStream {
      */
     public static InputStream from(String filename) {
         try {
-            List<String> input = Files
+            var input = Files
                     .lines(Paths.get(filename), StandardCharsets.US_ASCII)
                     .collect(Collectors.toList());
-            Stream<SToken> stream = IntStream
+            var stream = IntStream
                     .range(0, input.size())
                     .mapToObj(x -> new SToken(input.get(x), x, 0));
             return new InputStream(stream);
@@ -59,7 +59,7 @@ public class InputStream {
     public InputStream splitterate() {
         delegate = delegate
                 .map(x -> {
-                    String[] lexemes = StringSplitterator.matcher(x.content())
+                    var lexemes = StringSplitterator.matcher(x.content())
                             .results()
                             .map(MatchResult::group)
                             .toArray(String[]::new);
