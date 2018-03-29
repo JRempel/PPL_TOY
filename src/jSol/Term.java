@@ -13,7 +13,7 @@ public enum Term {
             case ID: return this.equals(KwId);
             case END: return this.equals(KwEnd);
             case TYPE: return this.equals(KwType);
-            case VAR: return this.equals(VarDef);
+            case VAR: return this.equals(KwVar);
             case INT: return this.equals(Int);
             case FLOAT: return this.equals(Float);
             case CHAR: return this.equals(Char);
