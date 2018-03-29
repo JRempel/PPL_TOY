@@ -65,18 +65,18 @@ public class AST {
             case String:
             case RefUse:
             case VarUse:
-                System.out.println(Collections.nCopies(tabs, "  ") + this.getAstType().name() + " = " + value);
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
                 break;
             case Program:
             case Function:
             case CoRoutine:
-                System.out.println(Collections.nCopies(tabs, "  ") + this.getAstType().name());
-                System.out.print(Collections.nCopies(tabs + 1, "  ") +"Symbols: ");
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name());
+                System.out.print(String.join("", Collections.nCopies(tabs + 1, "  ")) +"Symbols: ");
                 for (var s : symbols.entrySet()) {
                     System.out.print(s.getKey() + "(" + Arrays.toString(s.getValue()) + ") ");
                 }
                 System.out.println();
-                System.out.print(Collections.nCopies(tabs + 1, "  ") +"Statements: ");
+                System.out.println(String.join("", Collections.nCopies(tabs + 1, "  ")) +"Statements: ");
                 for (var s : statements) {
                     s.print(tabs + 2);
                 }
