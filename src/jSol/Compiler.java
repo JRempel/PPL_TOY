@@ -2,7 +2,7 @@ package jSol;
 
 public class Compiler {
     public static void main(String[] args) {
-        compile("./vector.txt");
+        compile("./fib.txt");
     }
 
     private static void compile(String path) {
@@ -12,13 +12,13 @@ public class Compiler {
                 .unComment()
                 .splitterate()
                 .tokenize()
-                .reportInvalid()
+                //.reportInvalid()
                 //Parser
                 .toParseTree()
-                .print();
+                //.print()
                 //To AST
-//                .toAST()
-//                .print();
-                // To AST
+                .toAST()
+                .print();
+        // To AST
     }
 }
