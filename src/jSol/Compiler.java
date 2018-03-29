@@ -15,7 +15,7 @@ public class Compiler {
                 //.reportInvalid()
                 //Parser
                 .toParseTree()
-                //.print()
+//                .print()
                 //To AST
                 .toAST()
                 .print();

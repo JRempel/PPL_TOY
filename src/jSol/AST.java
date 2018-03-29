@@ -6,17 +6,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public enum AST {
-    Program, Function, CoRoutine, VarUse, RefUse, Int, Float, Char, String, UNKNOWN;
+public class AST {
 
     private HashMap<String, int[]> symbols;
     private List<AST> statements;
     private String value;
+    private ASTType astType;
 
-    AST() {
+    AST(ASTType type) {
         symbols = new HashMap<>();
         statements = new ArrayList<>();
         value = "";
+        astType = type;
+
     }
 
     public java.lang.String getValue() {
@@ -47,20 +49,28 @@ public enum AST {
         print(0);
     }
 
+    public ASTType getAstType() {
+        return astType;
+    }
+
+    public void setAstType(ASTType astType) {
+        this.astType = astType;
+    }
+
     private void print(int tabs) {
-        switch (this) {
+        switch (this.getAstType()) {
             case Int:
             case Char:
             case Float:
             case String:
             case RefUse:
             case VarUse:
-                System.out.println(Collections.nCopies(tabs, "  ") + this.name() + " = " + value);
+                System.out.println(Collections.nCopies(tabs, "  ") + this.getAstType().name() + " = " + value);
                 break;
             case Program:
             case Function:
             case CoRoutine:
-                System.out.println(Collections.nCopies(tabs, "  ") + this.name());
+                System.out.println(Collections.nCopies(tabs, "  ") + this.getAstType().name());
                 System.out.print(Collections.nCopies(tabs + 1, "  ") +"Symbols: ");
                 for (var s : symbols.entrySet()) {
                     System.out.print(s.getKey() + "(" + Arrays.toString(s.getValue()) + ") ");

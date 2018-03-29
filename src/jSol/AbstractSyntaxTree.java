@@ -1,5 +1,6 @@
 package jSol;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import static jSol.Term.*;
@@ -8,11 +9,16 @@ public class AbstractSyntaxTree {
     private static Set<Term> hasChildren = Set.of(Program, TopDef, FunDef, CoFunDef, TypeDef,
             Fields, Body, Statement, Def, VarDef, SimpleStatement, Lambda, FunLambda, CoFunLambda);
 
-    private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, Lambda);
+    private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, KwLambdaBegin, KwCFLambdaBegin);
 
     private AST root;
     private Set<String> strings;
     private Set<String> types;
+
+    AbstractSyntaxTree() {
+        strings = new HashSet<>();
+        types = new HashSet<>();
+    }
 
     public AST getRoot() {
         return root;
@@ -52,8 +58,8 @@ public class AbstractSyntaxTree {
         var type = tree.getType();
         if (isNewScope.contains(type)) {
 
-            AST unkownParent = AST.UNKNOWN;
-            AST typeAST = AST.Function;
+            AST unknownParent = new AST(ASTType.UNKNOWN);
+            AST typeAST = new AST(ASTType.Function);
 
             for (var child : tree.getChildren()) {
 
@@ -63,17 +69,19 @@ public class AbstractSyntaxTree {
                     typeAST.addStatement(node);
                 }
             }
-            unkownParent.addStatement(typeAST);
-            return unkownParent;
+            unknownParent.addStatement(typeAST);
+            unknownParent.print();
+            return unknownParent;
 
         } else if (hasChildren.contains(type)) {
             // extract children results, create new AST.UNKNOWN, pass up chain
 
-            AST parentAST = AST.UNKNOWN;
+            AST parentAST = new AST(ASTType.UNKNOWN);
+
 
             if (type.equals(VarDef)) {
 
-                AST varDef = AST.VarUse;
+                AST varDef = new AST(ASTType.VarUse);
                 varDef.setValue(tree.getChildren()[1].getContent());
                 parentAST.addStatement(varDef);
             } else {
@@ -88,42 +96,48 @@ public class AbstractSyntaxTree {
 
             }
 
+            parentAST.print();
             return parentAST;
         } else {
             if (type.equals(Epsilon)) {
-                return AST.UNKNOWN;
+                return new AST(ASTType.UNKNOWN);
             } else {
-                var parent = AST.UNKNOWN;
+                var parent = new AST(ASTType.UNKNOWN);
                 switch (type) {
                     case Int:
-                        AST intAst = AST.Int;
+                        AST intAst = new AST(ASTType.Int);
                         intAst.setValue(tree.getContent());
                         parent.addStatement(intAst);
                         return parent;
                     case Float:
-                        AST floatAST = AST.Float;
+                        AST floatAST = new AST(ASTType.Float);
                         floatAST.setValue(tree.getContent());
                         parent.addStatement(floatAST);
                         return parent;
                     case String:
-                        AST stringAST = AST.String;
+                        AST stringAST = new AST(ASTType.String);
                         stringAST.setValue(tree.getContent());
                         parent.addStatement(stringAST);
                         return parent;
                     case Char:
-                        AST charAST = AST.Char;
+                        AST charAST = new AST(ASTType.Char);
                         charAST.setValue(tree.getContent());
                         parent.addStatement(charAST);
                         return parent;
                     case KwReference:
-                        AST refAST = AST.RefUse;
+                        AST refAST = new AST(ASTType.RefUse);
                         refAST.setValue(tree.getContent());
                         parent.addStatement(refAST);
                         return parent;
                     case KwFun:
-                        return AST.UNKNOWN;
+                    case KwLambdaEnd:
+                    case KwCFLambdaEnd:
+                    case KwSymbol:
+                        // Do something with symbol table eventually...
+                    case KwEnd:
+                        return new AST(ASTType.UNKNOWN);
                     case KwId:
-                        AST astId = AST.VarUse;
+                        AST astId = new AST(ASTType.VarUse);
                         astId.setValue(tree.getContent());
                         parent.addStatement(astId);
                         return parent;
