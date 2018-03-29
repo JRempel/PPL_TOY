@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public enum AST {
-    Program, Function, CoRoutine, VarUse, RefUse, Int, Float, Char, String;
+    Program, Function, CoRoutine, VarUse, RefUse, Int, Float, Char, String, UNKNOWN;
 
     private HashMap<String, int[]> symbols;
     private List<AST> statements;
