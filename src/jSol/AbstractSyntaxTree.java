@@ -1,6 +1,9 @@
 package jSol;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static jSol.Term.*;
@@ -9,7 +12,7 @@ public class AbstractSyntaxTree {
     private static Set<Term> hasChildren = Set.of(Program, TopDef, FunDef, CoFunDef, TypeDef,
             Fields, Body, Statement, Def, VarDef, SimpleStatement, Lambda, FunLambda, CoFunLambda);
 
-    private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, KwLambdaBegin, KwCFLambdaBegin);
+    private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, Lambda);
 
     private AST root;
     private Set<String> strings;
@@ -49,19 +52,29 @@ public class AbstractSyntaxTree {
         // CALL toAST HERE
         // CREATE STRINGS & TYPES TABLE HERE
 
-        ast.setRoot(toAST(tree));
+        ast.setRoot(toAST(tree).getStatements().get(0));
         return ast;
     }
 
     //TODO - deal with typeDEF
     private static AST toAST(ParseTree tree) {
         var type = tree.getType();
+        if (type.equals(FunDef)) {
+            int a = 0;
+        }
         if (isNewScope.contains(type)) {
 
             AST unknownParent = new AST(ASTType.UNKNOWN);
             AST typeAST = new AST(ASTType.Function);
 
-            for (var child : tree.getChildren()) {
+            ArrayList<ParseTree> treeChildren = new ArrayList<>(Arrays.asList(tree.getChildren()));
+
+            if (type == FunDef || type == CoFunDef) {
+                treeChildren.remove(1);
+                treeChildren.remove(0);
+            }
+
+            for (var child : treeChildren) {
 
                 AST childAST = toAST(child);
 
@@ -70,7 +83,6 @@ public class AbstractSyntaxTree {
                 }
             }
             unknownParent.addStatement(typeAST);
-            unknownParent.print();
             return unknownParent;
 
         } else if (hasChildren.contains(type)) {
@@ -96,7 +108,6 @@ public class AbstractSyntaxTree {
 
             }
 
-            parentAST.print();
             return parentAST;
         } else {
             if (type.equals(Epsilon)) {
@@ -130,12 +141,18 @@ public class AbstractSyntaxTree {
                         parent.addStatement(refAST);
                         return parent;
                     case KwFun:
+                    case KwLambdaBegin:
+                    case KwCFLambdaBegin:
                     case KwLambdaEnd:
                     case KwCFLambdaEnd:
-                    case KwSymbol:
-                        // Do something with symbol table eventually...
                     case KwEnd:
                         return new AST(ASTType.UNKNOWN);
+                    case KwSymbol:
+                        // Do something with symbol table eventually...
+                        AST astSymbol = new AST(ASTType.Symbol);
+                        astSymbol.setValue(tree.getContent());
+                        parent.addStatement(astSymbol);
+                        return parent;
                     case KwId:
                         AST astId = new AST(ASTType.VarUse);
                         astId.setValue(tree.getContent());

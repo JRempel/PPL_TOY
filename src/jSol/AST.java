@@ -78,7 +78,7 @@ public class AST {
                 System.out.println();
                 System.out.print(Collections.nCopies(tabs + 1, "  ") +"Statements: ");
                 for (var s : statements) {
-                    print(tabs + 2);
+                    s.print(tabs + 2);
                 }
                 break;
         }

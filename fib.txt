@@ -1,5 +1,5 @@
-fun fibonacci // n -- F_n
-    fun fib // n-i F_{i-1} F_i -- F_n
+fun fibonacci
+    fun fib
         rotl dup 0 =
         [ drop swap drop ]
         [ 1 - rotr dup rotl + fib ] ??
@@ -7,8 +7,7 @@ fun fibonacci // n -- F_n
     0 1 fib
 .
 
-// Calculate the 10th Fibonacci number and print it to stdout
 fun main
-    :start drop // Doing this only to show how to handle symbols
+    :start drop
     10 fibonacci format "F_10 = " swap ++ putStr nl
 .
