@@ -2,7 +2,7 @@ package jSol;
 
 public class Compiler {
     public static void main(String[] args) {
-        compile("./fib.txt");
+        compile("./vector.txt");
     }
 
     private static void compile(String path) {

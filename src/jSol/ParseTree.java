@@ -46,6 +46,7 @@ public class ParseTree {
         var stack = new Stack<ParseTree>();
         stack.push(start);
         tokens.forEach(curr -> {
+            // Generate all productions possible from predict set, given input from token-stream
             while (!stack.empty() && !stack.peek().getType().isEqualTo(curr) && !(stack.peek().getType() == Epsilon)) {
                 var top = stack.pop();
                 var productionForTop = Predict.getExpResult(top.getType(), curr);
@@ -63,12 +64,14 @@ public class ParseTree {
                     stack.push(top.getChildren()[i]);
                 }
 
+                // Remove Epsilon's from stack - can be generated, but obviously no predict match
                 while (!stack.empty() && stack.peek().getType() == Epsilon) {
                     stack.pop();
                 }
             }
 
             if (!stack.empty()) {
+                // Finished with input from token-stream, discard + pop
                 if (stack.peek().getType().isEqualTo(curr)) {
                     var p = stack.pop();
                     p.setContent(curr.content());

@@ -65,6 +65,8 @@ public class AST {
             case String:
             case RefUse:
             case VarUse:
+            case Var:
+            case Symbol:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
                 break;
             case Program:
