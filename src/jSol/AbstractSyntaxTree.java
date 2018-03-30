@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static jSol.ASTType.Function;
+import static jSol.ASTType.Var;
 import static jSol.Term.*;
 
 public class AbstractSyntaxTree {
@@ -49,7 +51,7 @@ public class AbstractSyntaxTree {
     public static AbstractSyntaxTree fromParseTree(ParseTree tree) {
         var ast = new AbstractSyntaxTree();
         // CREATE STRINGS & TYPES TABLE HERE
-        AST root = toAST(tree).getStatements().get(0);
+        AST root = toAST(tree);
         root.setAstType(ASTType.Program);
         ast.setRoot(root);
         return ast;
@@ -61,7 +63,7 @@ public class AbstractSyntaxTree {
         if (isNewScope.contains(type)) {
 
             var unknownParent = new AST(ASTType.UNKNOWN);
-            var typeAST = new AST(ASTType.Function);
+            var typeAST = new AST(type == Lambda ? ASTType.Lambda : Function);
 
             ArrayList<ParseTree> treeChildren = new ArrayList<>(Arrays.asList(tree.getChildren()));
 
@@ -85,29 +87,21 @@ public class AbstractSyntaxTree {
                 return new AST(ASTType.UNKNOWN);
             }
 
-            // Hoist statements up a level, when a function's statement contents is exactly one function (with optional var statement at end)
-            // May need to check for weird edge-cases, or go about this another way -- second pass required?
-            if (typeAST.getStatements().size() < 2 && typeAST.getStatements().get(0).getAstType() == ASTType.Function) {
-                var collapsedTypeAST = new AST(ASTType.Function);
-                for (var subStatement : typeAST.getStatements().get(0).getStatements()) {
-                    collapsedTypeAST.addStatement(subStatement);
-                }
-
-                unknownParent.addStatement(collapsedTypeAST);
-
-                // Also hoist 'var = fn_name' statement if it exists
-                if (typeAST.getStatements().size() == 2) {
-                    unknownParent.addStatement(typeAST.getStatements().get(1));
-                }
-            } else {
-                unknownParent.addStatement(typeAST);
-            }
+            unknownParent.addStatement(typeAST);
 
             // Add Var with function name after declaration
             if (type == FunDef || type == CoFunDef) {
-                var nameAst = new AST(ASTType.Var);
+                var nameAst = new AST(Var);
                 nameAst.setValue(tree.getChildren()[1].getContent());
                 unknownParent.addStatement(nameAst);
+            }
+
+            // Hoist un-named functions... within a function; intentionally ignore lambdas
+            if (typeAST.getAstType() == Function && unknownParent.getStatements().get(unknownParent.getStatements().size() - 1).getAstType() != Var) {
+                for (var subStatement : typeAST.getStatements()) {
+                    unknownParent.addStatement(subStatement);
+                }
+                unknownParent.getStatements().remove(typeAST);
             }
 
             return unknownParent;
@@ -122,7 +116,7 @@ public class AbstractSyntaxTree {
             }
 
             if (type == VarDef) {
-                var varDefAST = new AST(ASTType.Var);
+                var varDefAST = new AST(Var);
                 varDefAST.setValue(tree.getChildren()[1].getContent());
                 parentAST.addStatement(varDefAST);
                 return parentAST;
@@ -189,7 +183,7 @@ public class AbstractSyntaxTree {
                         parent.addStatement(id);
                         return parent;
                     case KwVar:
-                        var var = new AST(ASTType.Var);
+                        var var = new AST(Var);
                         var.setValue(tree.getContent());
                         parent.addStatement(var);
                         return parent;

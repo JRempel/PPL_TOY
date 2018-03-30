@@ -72,6 +72,7 @@ public class AST {
             case Program:
             case Function:
             case CoRoutine:
+            case Lambda:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name());
                 System.out.print(String.join("", Collections.nCopies(tabs + 1, "  ")) +"Symbols: ");
                 for (var s : symbols.entrySet()) {
