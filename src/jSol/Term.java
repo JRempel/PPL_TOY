@@ -2,15 +2,15 @@ package jSol;
 
 public enum Term {
     Program, TopDef, FunDef, CoFunDef, TypeDef, Fields, Body, Statement, Def, VarDef,
-    SimpleStatement, Lambda, FunLambda, CoFunLambda, KwFun, KwId, KwEnd, KwCoFun, KwType, KwVar,
-    Int, Float, Char, String, KwSymbol, KwReference, KwLambdaBegin, KwLambdaEnd, KwCFLambdaBegin,
-    KwCFLambdaEnd, Epsilon;
+    SimpleStatement, Lambda, FunLambda, CoFunLambda, KwFun, KwId, KwTypeId, KwTypeField, KwEnd,
+    KwCoFun, KwType, KwVar, Int, Float, Char, String, KwSymbol, KwReference, KwLambdaBegin,
+    KwLambdaEnd, KwCFLambdaBegin, KwCFLambdaEnd, Epsilon;
 
     public boolean isEqualTo(Token token) {
         switch (token) {
             case FUN: return this.equals(KwFun);
             case COFUN: return this.equals(KwCoFun);
-            case ID: return this.equals(KwId);
+            case ID: return this.equals(KwId) || this.equals(KwTypeId) || this.equals(KwTypeField);
             case END: return this.equals(KwEnd);
             case TYPE: return this.equals(KwType);
             case VAR: return this.equals(KwVar);

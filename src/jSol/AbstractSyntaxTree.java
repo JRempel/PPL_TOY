@@ -2,7 +2,6 @@ package jSol;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static jSol.ASTType.Function;
@@ -16,12 +15,12 @@ public class AbstractSyntaxTree {
     private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, Lambda);
 
     private AST root;
-    private Set<String> strings;
-    private Set<String> types;
+    private ArrayList<String> strings;
+    private ArrayList<String> types;
 
     AbstractSyntaxTree() {
-        strings = new LinkedHashSet<>();
-        types = new LinkedHashSet<>();
+        strings = new ArrayList<>();
+        types = new ArrayList<>();
     }
 
     public AST getRoot() {
@@ -32,33 +31,33 @@ public class AbstractSyntaxTree {
         this.root = root;
     }
 
-    public Set<java.lang.String> getStrings() {
+    public ArrayList<String> getStrings() {
         return strings;
     }
 
-    public void setStrings(Set<java.lang.String> strings) {
+    public void setStrings(ArrayList<String> strings) {
         this.strings = strings;
     }
 
-    public Set<java.lang.String> getTypes() {
+    public ArrayList<String> getTypes() {
         return types;
     }
 
-    public void setTypes(Set<java.lang.String> types) {
+    public void setTypes(ArrayList<String> types) {
         this.types = types;
     }
 
     public static AbstractSyntaxTree fromParseTree(ParseTree tree) {
         var ast = new AbstractSyntaxTree();
         // CREATE STRINGS & TYPES TABLE HERE
-        AST root = toAST(tree);
+        AST root = toAST(tree, ast.getStrings(), ast.getTypes());
         root.setAstType(ASTType.Program);
         ast.setRoot(root);
         return ast;
     }
 
     //TODO - deal with typeDEF
-    private static AST toAST(ParseTree tree) {
+    private static AST toAST(ParseTree tree, ArrayList<String> stringTable, ArrayList<String> typeTable) {
         var type = tree.getType();
         if (isNewScope.contains(type)) {
 
@@ -75,7 +74,7 @@ public class AbstractSyntaxTree {
 
             // Collect subtree statements
             for (var child : treeChildren) {
-                var childAST = toAST(child);
+                var childAST = toAST(child, stringTable, typeTable);
 
                 for (var node : childAST.getStatements()) {
                     typeAST.addStatement(node);
@@ -92,7 +91,11 @@ public class AbstractSyntaxTree {
             // Add Var with function name after declaration
             if (type == FunDef || type == CoFunDef) {
                 var nameAst = new AST(Var);
-                nameAst.setValue(tree.getChildren()[1].getContent());
+                String value = tree.getChildren()[1].getContent();
+                if (!stringTable.contains(value)) {
+                    stringTable.add(value);
+                }
+                nameAst.setValue(value);
                 unknownParent.addStatement(nameAst);
             }
 
@@ -112,18 +115,28 @@ public class AbstractSyntaxTree {
 
             if (type == TypeDef) {
                 // TODO: Pass types & strings back up the tree
+                System.out.println("-------------------");
+                for (var child : tree.getChildren()) {
+                    var test = toAST(child, stringTable, typeTable);
+                    test.print();
+                }
+                System.out.println("-------------------");
                 return parentAST;
             }
 
             if (type == VarDef) {
                 var varDefAST = new AST(Var);
-                varDefAST.setValue(tree.getChildren()[1].getContent());
+                var value = tree.getChildren()[1].getContent();
+                if (!stringTable.contains(value)) {
+                    stringTable.add(value);
+                }
+                varDefAST.setValue(value);
                 parentAST.addStatement(varDefAST);
                 return parentAST;
             }
 
             for (var child : tree.getChildren()) {
-                var childAST = toAST(child);
+                var childAST = toAST(child, stringTable, typeTable);
 
                 for (var node : childAST.getStatements()) {
                     parentAST.addStatement(node);
@@ -136,6 +149,7 @@ public class AbstractSyntaxTree {
                 return new AST(ASTType.UNKNOWN);
             } else {
                 var parent = new AST(ASTType.UNKNOWN);
+                String value;
                 switch (type) {
                     case Int:
                         var intAst = new AST(ASTType.Int);
@@ -150,7 +164,11 @@ public class AbstractSyntaxTree {
                     case String:
                         var stringAST = new AST(ASTType.String);
                         // Remove the '"' at start and end of content
-                        stringAST.setValue(tree.getContent().substring(1, tree.getContent().length() - 1));
+                        value = tree.getContent().substring(1, tree.getContent().length() - 1);
+                        if (!stringTable.contains(value)) {
+                            stringTable.add(value);
+                        }
+                        stringAST.setValue("" + stringTable.indexOf(value));
                         parent.addStatement(stringAST);
                         return parent;
                     case Char:
@@ -170,20 +188,41 @@ public class AbstractSyntaxTree {
                     case KwCFLambdaBegin:
                     case KwLambdaEnd:
                     case KwCFLambdaEnd:
-                    case KwType: // TODO: REMOVE/CHANGE THIS LINE WHEN FILLING TYPE TABLE
+                    case KwType:
                     case KwEnd:
                         return new AST(ASTType.UNKNOWN);
                     case KwSymbol:
                         // Do something with symbol table eventually...
                         var symbol = new AST(ASTType.Symbol);
-                        symbol.setValue(tree.getContent());
+                        // Remove the ':' at the beginning of symbol content
+                        value = tree.getContent().substring(1);
+                        if (!stringTable.contains(value)) {
+                            stringTable.add(value);
+                        }
+                        symbol.setValue("" + stringTable.indexOf(value));
                         parent.addStatement(symbol);
                         return parent;
                     case KwId:
                         var id = new AST(ASTType.VarUse);
-                        id.setValue(tree.getContent());
+                        value = tree.getContent();
+                        if (!typeTable.contains(value) && !stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
+                            stringTable.add(value);
+                        }
+                        id.setValue(value);
                         parent.addStatement(id);
                         return parent;
+                    case KwTypeId:
+                        value = tree.getContent();
+                        if (!typeTable.contains(value)) {
+                            typeTable.add(value);
+                        }
+                        return new AST(ASTType.UNKNOWN);
+                    case KwTypeField:
+                        value = tree.getContent();
+                        if (!stringTable.contains(value)) {
+                            stringTable.add(value);
+                        }
+                        return new AST(ASTType.UNKNOWN);
                     case KwVar:
                         var var = new AST(Var);
                         var.setValue(tree.getContent());

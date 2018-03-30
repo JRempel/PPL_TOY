@@ -25,10 +25,10 @@ public class Predict {
             put(COFUN, new Term[]{KwCoFun, KwId, Body, KwEnd});
         }});
         put(TypeDef, new HashMap<>() {{
-            put(TYPE, new Term[]{KwType, KwId, Fields, KwEnd});
+            put(TYPE, new Term[]{KwType, KwTypeId, Fields, KwEnd});
         }});
         put(Fields, new HashMap<>() {{
-            put(ID, new Term[]{KwId, Fields});
+            put(ID, new Term[]{KwTypeField, Fields});
             put(END, new Term[]{Epsilon});
         }});
         put(Body, new HashMap<>() {{
