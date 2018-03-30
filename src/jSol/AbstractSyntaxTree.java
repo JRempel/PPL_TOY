@@ -86,6 +86,7 @@ public class AbstractSyntaxTree {
             }
 
             // Hoist statements up a level, when a function's statement contents is exactly one function (with optional var statement at end)
+            // May need to check for weird edge-cases, or go about this another way -- second pass required?
             if (typeAST.getStatements().size() < 2 && typeAST.getStatements().get(0).getAstType() == ASTType.Function) {
                 var collapsedTypeAST = new AST(ASTType.Function);
                 for (var subStatement : typeAST.getStatements().get(0).getStatements()) {
