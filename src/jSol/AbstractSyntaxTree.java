@@ -62,6 +62,7 @@ public class AbstractSyntaxTree {
         if (isNewScope.contains(type)) {
 
             var unknownParent = new AST(ASTType.UNKNOWN);
+            // Label lambda's different for function hoisting
             var typeAST = new AST(type == Lambda ? ASTType.Lambda : Function);
 
             ArrayList<ParseTree> treeChildren = new ArrayList<>(Arrays.asList(tree.getChildren()));
@@ -112,17 +113,6 @@ public class AbstractSyntaxTree {
         } else if (hasChildren.contains(type)) {
             // extract children results, create new AST.UNKNOWN, pass up chain
             var parentAST = new AST(ASTType.UNKNOWN);
-
-            if (type == TypeDef) {
-                // TODO: Pass types & strings back up the tree
-                System.out.println("-------------------");
-                for (var child : tree.getChildren()) {
-                    var test = toAST(child, stringTable, typeTable);
-                    test.print();
-                }
-                System.out.println("-------------------");
-                return parentAST;
-            }
 
             if (type == VarDef) {
                 var varDefAST = new AST(Var);
@@ -203,10 +193,16 @@ public class AbstractSyntaxTree {
                         parent.addStatement(symbol);
                         return parent;
                     case KwId:
-                        var id = new AST(ASTType.VarUse);
                         value = tree.getContent();
+                        AST id;
                         if (!typeTable.contains(value) && !stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
                             stringTable.add(value);
+                        }
+                        if (BuiltInFunctions.isBuildInFunction(value)) {
+                            id = new AST(ASTType.BuiltInCall);
+                            value = "" + BuiltInFunctions.getBuiltInFunctionValue(value);
+                        } else {
+                            id = new AST(ASTType.VarUse);
                         }
                         id.setValue(value);
                         parent.addStatement(id);
