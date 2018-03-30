@@ -2,7 +2,7 @@ package jSol;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static jSol.ASTType.Function;
@@ -20,8 +20,8 @@ public class AbstractSyntaxTree {
     private Set<String> types;
 
     AbstractSyntaxTree() {
-        strings = new HashSet<>();
-        types = new HashSet<>();
+        strings = new LinkedHashSet<>();
+        types = new LinkedHashSet<>();
     }
 
     public AST getRoot() {
@@ -149,12 +149,14 @@ public class AbstractSyntaxTree {
                         return parent;
                     case String:
                         var stringAST = new AST(ASTType.String);
-                        stringAST.setValue(tree.getContent());
+                        // Remove the '"' at start and end of content
+                        stringAST.setValue(tree.getContent().substring(1, tree.getContent().length() - 1));
                         parent.addStatement(stringAST);
                         return parent;
                     case Char:
                         var charAST = new AST(ASTType.Char);
-                        charAST.setValue(tree.getContent());
+                        // remove the ''' at start and end of content
+                        charAST.setValue(tree.getContent().substring(1, tree.getContent().length() - 1));
                         parent.addStatement(charAST);
                         return parent;
                     case KwReference:
