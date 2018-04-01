@@ -248,4 +248,12 @@ public class AbstractSyntaxTree {
         root.print();
         return this;
     }
+
+    public void addString(String s){
+        getStrings().add(s);
+    }
+
+    public void addType(String t){
+        getStrings().add(t);
+    }
 }
