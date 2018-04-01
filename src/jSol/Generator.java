@@ -5,7 +5,18 @@ public class Generator {
     public static void main (String [] args){
 
         AbstractSyntaxTree root =  new AbstractSyntaxTree();
-
+        //Strings
+        root.addString("x");
+        root.addString("x=");
+        root.addString("y");
+        root.addString("y=");
+        root.addString("sqrt");
+        root.addString("go");
+        root.addString("vector_len");
+        root.addString("main");
+        root.addString("len(3,4)=");
+        //Types
+        root.addType("vector");
         //Program
         AST n000 = new AST(ASTType.Program);
         root.setRoot(n000);
