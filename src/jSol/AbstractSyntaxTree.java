@@ -1,7 +1,10 @@
 package jSol;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static jSol.ASTType.Function;
@@ -74,11 +77,61 @@ public class AbstractSyntaxTree {
             }
 
             // Collect subtree statements
+            int fnSymbolIndex = 0;
+            int typeSymbolIndex = 0;
+
             for (var child : treeChildren) {
                 var childAST = toAST(child, stringTable, typeTable);
 
                 for (var node : childAST.getStatements()) {
                     typeAST.addStatement(node);
+                }
+
+                int numTypeParam = 0;
+                Map.Entry<String, int[]> tempType = null;
+                boolean typeAdded = false;
+                var tempSymbolListAfterTempType = new ArrayList<Map.Entry<String, int[]>>();
+                for (var symbol : childAST.getSymbols()) {
+                    // Update index in local symbol table before adding
+                    int[] meta = symbol.getValue();
+                    if (meta[0] == 0) {
+                        meta[1] = fnSymbolIndex;
+                        fnSymbolIndex++;
+                        if (!typeAdded && tempType != null) {
+                            tempSymbolListAfterTempType.add(new AbstractMap.SimpleEntry<>(symbol.getKey(), meta));
+                        } else {
+                            typeAST.addSymbol(symbol.getKey(), meta);
+                        }
+                    }
+                    if (meta[0] == 1) {
+                        meta[1] = typeSymbolIndex;
+                        if (tempType != null) {
+                            int[] paramUpdate = tempType.getValue();
+                            paramUpdate[2] = numTypeParam;
+                            tempType.setValue(paramUpdate);
+                            typeAST.addSymbol(tempType.getKey(), tempType.getValue());
+                            for (var tempSymbol : tempSymbolListAfterTempType) {
+                                typeAST.addSymbol(tempSymbol.getKey(), tempSymbol.getValue());
+                            }
+                            typeAdded = true;
+                        }
+                        tempType = new AbstractMap.SimpleEntry<>(symbol.getKey(), symbol.getValue());
+                        typeAdded = false;
+                        numTypeParam = 0;
+                        typeSymbolIndex++;
+                    }
+                    if (meta[0] == -1) {
+                        numTypeParam++;
+                    }
+                }
+                if (tempType != null && !typeAdded) {
+                    int[] paramUpdate = tempType.getValue();
+                    paramUpdate[2] = numTypeParam;
+                    tempType.setValue(paramUpdate);
+                    typeAST.addSymbol(tempType.getKey(), tempType.getValue());
+                    for (var tempSymbol : tempSymbolListAfterTempType) {
+                        typeAST.addSymbol(tempSymbol.getKey(), tempSymbol.getValue());
+                    }
                 }
             }
 
@@ -98,12 +151,18 @@ public class AbstractSyntaxTree {
                 }
                 nameAst.setValue(value);
                 unknownParent.addStatement(nameAst);
+
+                // { Type function, index of fn in symbol table (define later), index in str table }
+                unknownParent.addSymbol(value, new int[]{0, 0, stringTable.indexOf(value)});
             }
 
             // Hoist un-named functions... within a function; intentionally ignore lambdas
             if (typeAST.getAstType() == Function && unknownParent.getStatements().get(unknownParent.getStatements().size() - 1).getAstType() != Var) {
                 for (var subStatement : typeAST.getStatements()) {
                     unknownParent.addStatement(subStatement);
+                }
+                for (var entry : typeAST.getSymbols()) {
+                    unknownParent.addSymbol(entry.getKey(), entry.getValue());
                 }
                 unknownParent.getStatements().remove(typeAST);
             }
@@ -131,6 +190,10 @@ public class AbstractSyntaxTree {
                 for (var node : childAST.getStatements()) {
                     parentAST.addStatement(node);
                 }
+
+                for (var symbol : childAST.getSymbols()) {
+                    parentAST.addSymbol(symbol.getKey(), symbol.getValue());
+                }
             }
 
             return parentAST;
@@ -141,17 +204,19 @@ public class AbstractSyntaxTree {
                 var parent = new AST(ASTType.UNKNOWN);
                 String value;
                 switch (type) {
-                    case Int:
+                    case Int: {
                         var intAst = new AST(ASTType.Int);
                         intAst.setValue(tree.getContent());
                         parent.addStatement(intAst);
                         return parent;
-                    case Float:
+                    }
+                    case Float: {
                         var floatAST = new AST(ASTType.Float);
                         floatAST.setValue(tree.getContent());
                         parent.addStatement(floatAST);
                         return parent;
-                    case String:
+                    }
+                    case String: {
                         var stringAST = new AST(ASTType.String);
                         // Remove the '"' at start and end of content
                         value = tree.getContent().substring(1, tree.getContent().length() - 1);
@@ -161,18 +226,21 @@ public class AbstractSyntaxTree {
                         stringAST.setValue("" + stringTable.indexOf(value));
                         parent.addStatement(stringAST);
                         return parent;
-                    case Char:
+                    }
+                    case Char: {
                         var charAST = new AST(ASTType.Char);
                         // remove the ''' at start and end of content
                         charAST.setValue(tree.getContent().substring(1, tree.getContent().length() - 1));
                         parent.addStatement(charAST);
                         return parent;
-                    case KwReference:
+                    }
+                    case KwReference: {
                         var ref = new AST(ASTType.RefUse);
                         // Remove the '%' char in front of reference
                         ref.setValue(tree.getContent().substring(1));
                         parent.addStatement(ref);
                         return parent;
+                    }
                     case KwFun:
                     case KwLambdaBegin:
                     case KwCFLambdaBegin:
@@ -181,7 +249,7 @@ public class AbstractSyntaxTree {
                     case KwType:
                     case KwEnd:
                         return new AST(ASTType.UNKNOWN);
-                    case KwSymbol:
+                    case KwSymbol: {
                         // Do something with symbol table eventually...
                         var symbol = new AST(ASTType.Symbol);
                         // Remove the ':' at the beginning of symbol content
@@ -192,7 +260,8 @@ public class AbstractSyntaxTree {
                         symbol.setValue("" + stringTable.indexOf(value));
                         parent.addStatement(symbol);
                         return parent;
-                    case KwId:
+                    }
+                    case KwId: {
                         value = tree.getContent();
                         AST id;
                         if (!typeTable.contains(value) && !stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
@@ -207,23 +276,32 @@ public class AbstractSyntaxTree {
                         id.setValue(value);
                         parent.addStatement(id);
                         return parent;
-                    case KwTypeId:
+                    }
+                    case KwTypeId: {
+                        AST unknownParent = new AST(ASTType.UNKNOWN);
                         value = tree.getContent();
                         if (!typeTable.contains(value)) {
                             typeTable.add(value);
                         }
-                        return new AST(ASTType.UNKNOWN);
-                    case KwTypeField:
+                        // {type of symbol, index of order of type in symbol table (update later), # params (update later)}
+                        unknownParent.addSymbol(value, new int[]{1, 0, 0});
+                        return unknownParent;
+                    }
+                    case KwTypeField: {
+                        AST unknownParent = new AST(ASTType.UNKNOWN);
                         value = tree.getContent();
                         if (!stringTable.contains(value)) {
                             stringTable.add(value);
                         }
-                        return new AST(ASTType.UNKNOWN);
-                    case KwVar:
+                        unknownParent.addSymbol(value, new int[]{-1});
+                        return unknownParent;
+                    }
+                    case KwVar: {
                         var var = new AST(Var);
                         var.setValue(tree.getContent());
                         parent.addStatement(var);
                         return parent;
+                    }
                     default:
                         System.out.printf("tree: \ntype:%s\ncontent:%s\n", tree.getType(), tree.getContent());
                         throw new RuntimeException("Could not match literal in toAST");
@@ -249,11 +327,11 @@ public class AbstractSyntaxTree {
         return this;
     }
 
-    public void addString(String s){
+    public void addString(String s) {
         getStrings().add(s);
     }
 
-    public void addType(String t){
+    public void addType(String t) {
         getStrings().add(t);
     }
 }
