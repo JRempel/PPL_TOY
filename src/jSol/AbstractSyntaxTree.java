@@ -411,6 +411,7 @@ public class AbstractSyntaxTree {
                 case Program:
                 case Function:
                 case Lambda:
+                case Symbol:
                 case Int:
                 case Char:
                 case Float:
