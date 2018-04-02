@@ -76,7 +76,7 @@ public class AST {
             case String:
             case RefUse:
             case VarUse:
-            case Var:
+//            case Var:
             case Symbol:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
                 break;
@@ -89,6 +89,7 @@ public class AST {
             case ObjectReadRef:
             case ObjectWriteRef:
             case Load:
+            case Var:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + Arrays.toString(secondPassVal));
                 break;
             case Program:

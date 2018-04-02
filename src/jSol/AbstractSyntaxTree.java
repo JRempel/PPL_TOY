@@ -389,16 +389,19 @@ public class AbstractSyntaxTree {
     }
 
     public AbstractSyntaxTree secondPass() {
-        secondPass(this.root, new ArrayList<>(), this.getTypes());
+        secondPass(this.root, new ArrayList<>(), this.getTypes(), new ArrayList<>());
         return this;
     }
 
-    private static void secondPass(AST node, List<List<Map.Entry<String, int[]>>> symbolScopes, List<Map.Entry<String, List<String>>> types) {
+    private static void secondPass(AST node, List<List<Map.Entry<String, int[]>>> symbolScopes, List<Map.Entry<String, List<String>>> types, List<String> varsInScope) {
         // Add current-node symbol scope
         var currScope = new ArrayList<>(node.getSymbols());
         if (node.getAstType() == ASTType.Function || node.getAstType() == ASTType.Lambda || node.getAstType() == ASTType.Program) {
-            symbolScopes = new ArrayList<>(symbolScopes); // ensure scopes aren't passed between children.
-            symbolScopes.add(0, currScope);  // so we don't have to reverse-iterate through scopes
+            // ensure scopes aren't passed between children.
+            symbolScopes = new ArrayList<>(symbolScopes);
+            varsInScope = new ArrayList<>(varsInScope);
+            // so we don't have to reverse-iterate through scopes
+            symbolScopes.add(0, currScope);
         }
 
         type:
@@ -503,17 +506,29 @@ public class AbstractSyntaxTree {
                     }
                 }
                 case Var: {
-                    // TODO:
+                    if (varsInScope.contains(node.getValue())) {
+                        throw new RuntimeException("Variable defined twice in scope: " + node.getAstType() + " " + node.getValue());
+                    } else {
+                        for (int i = 0; i < symbolScopes.size(); i++) {
+                            for (var symbol : symbolScopes.get(i)) {
+                                if (symbol.getKey().equals(node.getValue())) {
+                                    node.setSecondPassVal(new int[]{symbol.getValue()[1]});
+                                }
+                            }
+                        }
+                    }
                     break type;
                 }
                 default:
-                    // eventually throw error here to detect invalid node-types
-                    throw new RuntimeException("Compiler error - invalid use in AST.");
+                    throw new RuntimeException("Compiler error - invalid use in AST: " + node.getAstType() + " " + node.getValue());
             }
         }
 
         for (var child : node.getStatements()) {
-            secondPass(child, symbolScopes, types);
+            secondPass(child, symbolScopes, types, varsInScope);
+            if (child.getAstType() == Var) {
+                varsInScope.add(child.getValue());
+            }
         }
     }
 
