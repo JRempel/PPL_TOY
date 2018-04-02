@@ -12,6 +12,7 @@ public class AST {
     private List<AST> statements;
     private String value;
     private ASTType astType;
+    private AST parent;
 
     AST(ASTType type) {
         symbols = new HashMap<>();
@@ -41,7 +42,16 @@ public class AST {
         return statements;
     }
 
+    public AST getParent() {
+        return parent;
+    }
+
+    public void setParent(AST parent) {
+        this.parent = parent;
+    }
+
     public void addStatement(AST statement) {
+        statement.setParent(this);
         statements.add(statement);
     }
 

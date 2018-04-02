@@ -15,8 +15,10 @@ public class AbstractSyntaxTree {
     private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, Lambda);
 
     private AST root;
+    //private AST parent;
     private ArrayList<String> strings;
     private ArrayList<String> types;
+
 
     AbstractSyntaxTree() {
         strings = new ArrayList<>();
