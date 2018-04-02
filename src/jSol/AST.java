@@ -78,6 +78,9 @@ public class AST {
             case VarUse:
             case Var:
             case BuiltInCall:
+            case LoadOrCall:
+            case ObjectRead:
+            case ObjectWrite:
             case Symbol:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
                 break;
