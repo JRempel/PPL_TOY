@@ -85,6 +85,10 @@ public class AST {
             case ObjectRead:
             case ObjectWrite:
             case BuiltInCall:
+            case ObjectConsRef:
+            case ObjectReadRef:
+            case ObjectWriteRef:
+            case Load:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + Arrays.toString(secondPassVal));
                 break;
             case Program:

@@ -459,8 +459,48 @@ public class AbstractSyntaxTree {
                     }
                 }
                 case RefUse: {
-                    // TODO:
-                    break type;
+                    for (int i = 0; i < symbolScopes.size(); i++) {
+                        for (var symbol : symbolScopes.get(i)) {
+                            if (symbol.getKey().equals(node.getValue())) {
+                                if (symbol.getValue()[0] == 0) {
+                                    // Function
+                                    int[] secondPassVal = Arrays.copyOf(symbol.getValue(), symbol.getValue().length);
+                                    secondPassVal[0] = i;
+                                    node.setSecondPassVal(secondPassVal);
+                                    node.setAstType(ASTType.Load);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 1) {
+                                    // Type constructor
+                                    int index = -1;
+                                    int params = -1;
+                                    for (var type : types) {
+                                        if (type.getKey().equals(node.getValue())) {
+                                            index = types.indexOf(type);
+                                            params = type.getValue().size();
+                                        }
+                                    }
+                                    node.setSecondPassVal(new int[]{index, params});
+                                    node.setAstType(ASTType.ObjectConsRef);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 2) {
+                                    // Type param read
+                                    node.setSecondPassVal(Arrays.copyOfRange(symbol.getValue(), 1, 4));
+                                    node.setAstType(ASTType.ObjectReadRef);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 3) {
+                                    // Type param write
+                                    node.setSecondPassVal(Arrays.copyOfRange(symbol.getValue(), 1, 4));
+                                    node.setAstType(ASTType.ObjectWriteRef);
+                                    break type;
+                                }
+                            }
+                        }
+                    }
+                    if (BuiltInFunctions.isBuildInFunction(node.getValue())) {
+                        node.setSecondPassVal(new int[]{BuiltInFunctions.getBuiltInFunctionValue(node.getValue())});
+                        node.setAstType(ASTType.BuiltInCall);
+                        break type;
+                    }
                 }
                 case Var: {
                     // TODO:
