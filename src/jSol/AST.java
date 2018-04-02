@@ -12,22 +12,23 @@ public class AST {
     private List<Map.Entry<String, int[]>> symbols;
     private List<AST> statements;
     private String value;
+    private int[] secondPassVal;
     private ASTType astType;
-    private AST parent;
 
     AST(ASTType type) {
         symbols = new ArrayList<>();
         statements = new ArrayList<>();
         value = "";
+        secondPassVal = null;
         astType = type;
 
     }
 
-    public java.lang.String getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(java.lang.String value) {
+    public void setValue(String value) {
         this.value = value;
     }
 
@@ -43,16 +44,7 @@ public class AST {
         return statements;
     }
 
-    public AST getParent() {
-        return parent;
-    }
-
-    public void setParent(AST parent) {
-        this.parent = parent;
-    }
-
     public void addStatement(AST statement) {
-        statement.setParent(this);
         statements.add(statement);
     }
 
@@ -68,6 +60,14 @@ public class AST {
         this.astType = astType;
     }
 
+    public int[] getSecondPassVal() {
+        return secondPassVal;
+    }
+
+    public void setSecondPassVal(int[] secondPassVal) {
+        this.secondPassVal = secondPassVal;
+    }
+
     private void print(int tabs) {
         switch (this.getAstType()) {
             case Int:
@@ -77,24 +77,27 @@ public class AST {
             case RefUse:
             case VarUse:
             case Var:
-            case BuiltInCall:
-            case LoadOrCall:
-            case ObjectRead:
-            case ObjectWrite:
             case Symbol:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
+                break;
+            case LoadOrCall:
+            case ObjectCons:
+            case ObjectRead:
+            case ObjectWrite:
+            case BuiltInCall:
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + Arrays.toString(secondPassVal));
                 break;
             case Program:
             case Function:
             case CoRoutine:
             case Lambda:
                 System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name());
-                System.out.print(String.join("", Collections.nCopies(tabs + 1, "  ")) +"Symbols: ");
+                System.out.print(String.join("", Collections.nCopies(tabs + 1, "  ")) + "Symbols: ");
                 for (var s : symbols) {
                     System.out.print(s.getKey() + "(" + Arrays.toString(s.getValue()) + ") ");
                 }
                 System.out.println();
-                System.out.println(String.join("", Collections.nCopies(tabs + 1, "  ")) +"Statements: ");
+                System.out.println(String.join("", Collections.nCopies(tabs + 1, "  ")) + "Statements: ");
                 for (var s : statements) {
                     s.print(tabs + 2);
                 }

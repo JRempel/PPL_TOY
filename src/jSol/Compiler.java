@@ -18,6 +18,7 @@ public class Compiler {
 //                .print()
                 //To AST
                 .toAST()
+                .secondPass()
                 .print();
         // To AST
     }

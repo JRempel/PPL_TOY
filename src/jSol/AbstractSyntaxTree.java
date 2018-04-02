@@ -3,11 +3,14 @@ package jSol;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static jSol.ASTType.Function;
+import static jSol.ASTType.LoadOrCall;
 import static jSol.ASTType.Var;
+import static jSol.ASTType.VarUse;
 import static jSol.Term.*;
 
 public class AbstractSyntaxTree {
@@ -17,10 +20,8 @@ public class AbstractSyntaxTree {
     private static Set<Term> isNewScope = Set.of(Program, FunDef, CoFunDef, Lambda);
 
     private AST root;
-    //private AST parent;
     private ArrayList<String> strings;
-    private ArrayList<String> types;
-
+    private ArrayList<Map.Entry<String, List<String>>> types;
 
     AbstractSyntaxTree() {
         strings = new ArrayList<>();
@@ -43,11 +44,11 @@ public class AbstractSyntaxTree {
         this.strings = strings;
     }
 
-    public ArrayList<String> getTypes() {
+    public ArrayList<Map.Entry<String, List<String>>> getTypes() {
         return types;
     }
 
-    public void setTypes(ArrayList<String> types) {
+    public void setTypes(ArrayList<Map.Entry<java.lang.String, List<java.lang.String>>> types) {
         this.types = types;
     }
 
@@ -59,7 +60,7 @@ public class AbstractSyntaxTree {
         return ast;
     }
 
-    private static AST toAST(ParseTree tree, ArrayList<String> stringTable, ArrayList<String> typeTable) {
+    private static AST toAST(ParseTree tree, List<String> stringTable, List<Map.Entry<String, List<String>>> typeTable) {
         var type = tree.getType();
         if (isNewScope.contains(type)) {
 
@@ -109,25 +110,37 @@ public class AbstractSyntaxTree {
                     // Types
                     if (meta[0] == 1) {
                         meta[1] = typeSymbolIndex;
-                        if (tempType != null) {
+                        if (tempType != null && !typeAdded) {
                             int[] paramUpdate = tempType.getValue();
                             paramUpdate[2] = numTypeParam;
                             tempType.setValue(paramUpdate);
                             typeAST.addSymbol(tempType.getKey(), tempType.getValue());
                             int typeFields = 0;
+                            var paramList = new ArrayList<String>();
                             for (var tempSymbol : tempSymbolListAfterTempType) {
                                 var tempValue = tempSymbol.getValue();
-                                if (tempValue[0] == 2) {
-                                    tempValue[1] = typeTable.indexOf(tempType.getKey());
+                                if (tempValue[0] == 2 || tempValue[0] == 3) {
+                                    for (var entry : typeTable) {
+                                        if (entry.getKey().equals(tempType.getKey())) {
+                                            tempValue[1] = typeTable.indexOf(entry);
+                                            break;
+                                        }
+                                    }
+                                    if (tempValue[0] == 2) {
+                                        paramList.add(tempSymbol.getKey());
+                                    }
                                     tempValue[2] = typeFields;
-                                } else if (tempValue[0] == 3) {
-                                    tempValue[1] = typeTable.indexOf(tempType.getKey());
-                                    tempValue[2] = typeFields;
-                                    typeFields++;
+                                    tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                                 }
+                                typeFields += (tempValue[0] == 2) ? 1 : 0;
                                 typeAST.addSymbol(tempSymbol.getKey(), tempValue);
                             }
-                            typeAdded = true;
+                            for (int i = 0; i < typeTable.size(); i++) {
+                                if (typeTable.get(i).getKey().equals(tempType.getKey())) {
+                                    var typeEntry = typeTable.get(i);
+                                    typeEntry.setValue(paramList);
+                                }
+                            }
                         }
                         tempType = new AbstractMap.SimpleEntry<>(symbol.getKey(), symbol.getValue());
                         typeAdded = false;
@@ -148,7 +161,6 @@ public class AbstractSyntaxTree {
 
                     // Type param write
                     if (meta[0] == 3) {
-                        numTypeParam++;
                         if (!typeAdded && tempType != null) {
                             tempSymbolListAfterTempType.add(new AbstractMap.SimpleEntry<>(symbol.getKey(), meta));
                         } else {
@@ -163,15 +175,30 @@ public class AbstractSyntaxTree {
                     tempType.setValue(paramUpdate);
                     typeAST.addSymbol(tempType.getKey(), tempType.getValue());
                     int typeFields = 0;
+                    var paramList = new ArrayList<String>();
                     for (var tempSymbol : tempSymbolListAfterTempType) {
                         var tempValue = tempSymbol.getValue();
                         if (tempValue[0] == 2 || tempValue[0] == 3) {
-                            tempValue[1] = typeTable.indexOf(tempType.getKey());
+                            for (var entry : typeTable) {
+                                if (entry.getKey().equals(tempType.getKey())) {
+                                    tempValue[1] = typeTable.indexOf(entry);
+                                    break;
+                                }
+                            }
+                            if (tempValue[0] == 2) {
+                                paramList.add(tempSymbol.getKey());
+                            }
                             tempValue[2] = typeFields;
                             tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                         }
-                        typeFields += (tempValue[0] == 3) ? 1 : 0;
+                        typeFields += (tempValue[0] == 2) ? 1 : 0;
                         typeAST.addSymbol(tempSymbol.getKey(), tempValue);
+                    }
+                    for (int i = 0; i < typeTable.size(); i++) {
+                        if (typeTable.get(i).getKey().equals(tempType.getKey())) {
+                            var typeEntry = typeTable.get(i);
+                            typeEntry.setValue(paramList);
+                        }
                     }
                 }
             }
@@ -310,12 +337,13 @@ public class AbstractSyntaxTree {
                         if (!typeTable.contains(value) && !stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
                             stringTable.add(value);
                         }
-                        if (BuiltInFunctions.isBuildInFunction(value)) {
-                            id = new AST(ASTType.BuiltInCall);
-                            value = "" + BuiltInFunctions.getBuiltInFunctionValue(value);
-                        } else {
-                            id = new AST(ASTType.VarUse);
-                        }
+                        // TODO: Come back to this depending on secondPass result(s)
+//                        if (BuiltInFunctions.isBuildInFunction(value)) {
+//                            id = new AST(ASTType.BuiltInCall);
+//                            value = "" + BuiltInFunctions.getBuiltInFunctionValue(value);
+//                        } else {
+                        id = new AST(ASTType.VarUse);
+//                        }
                         id.setValue(value);
                         parent.addStatement(id);
                         return parent;
@@ -324,7 +352,8 @@ public class AbstractSyntaxTree {
                         AST unknownParent = new AST(ASTType.UNKNOWN);
                         value = tree.getContent();
                         if (!typeTable.contains(value)) {
-                            typeTable.add(value);
+                            var params = new AbstractMap.SimpleEntry<String, List<String>>(value, new ArrayList<>());
+                            typeTable.add(params);
                         }
                         // {type of symbol, index of order of type in symbol table (update later), # params (update later)}
                         unknownParent.addSymbol(value, new int[]{1, 0, 0});
@@ -356,6 +385,95 @@ public class AbstractSyntaxTree {
                         throw new RuntimeException("Could not match literal in toAST");
                 }
             }
+        }
+    }
+
+    public AbstractSyntaxTree secondPass() {
+        secondPass(this.root, new ArrayList<>(), this.getTypes());
+        return this;
+    }
+
+    private static void secondPass(AST node, List<List<Map.Entry<String, int[]>>> symbolScopes, List<Map.Entry<String, List<String>>> types) {
+        // Add current-node symbol scope
+        var currScope = new ArrayList<>(node.getSymbols());
+        if (node.getAstType() == ASTType.Function || node.getAstType() == ASTType.Lambda || node.getAstType() == ASTType.Program) {
+            symbolScopes = new ArrayList<>(symbolScopes); // ensure scopes aren't passed between children.
+            symbolScopes.add(0, currScope);  // so we don't have to reverse-iterate through scopes
+        }
+
+        type:
+        {
+            switch (node.getAstType()) {
+                // Node type never changes, or is non-terminal
+                case Program:
+                case Function:
+                case Lambda:
+                case Int:
+                case Char:
+                case Float:
+                case String: {
+                    break type;
+                }
+                case VarUse: {
+                    for (int i = 0; i < symbolScopes.size(); i++) {
+                        for (var symbol : symbolScopes.get(i)) {
+                            if (symbol.getKey().equals(node.getValue())) {
+                                if (symbol.getValue()[0] == 0) {
+                                    // Function
+                                    int[] secondPassVal = Arrays.copyOf(symbol.getValue(), symbol.getValue().length);
+                                    secondPassVal[0] = i;
+                                    node.setSecondPassVal(secondPassVal);
+                                    node.setAstType(ASTType.LoadOrCall);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 1) {
+                                    // Type constructor
+                                    int index = -1;
+                                    int params = -1;
+                                    for (var type : types) {
+                                        if (type.getKey().equals(node.getValue())) {
+                                            index = types.indexOf(type);
+                                            params = type.getValue().size();
+                                        }
+                                    }
+                                    node.setSecondPassVal(new int[]{index, params});
+                                    node.setAstType(ASTType.ObjectCons);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 2) {
+                                    // Type param read
+                                    node.setSecondPassVal(Arrays.copyOfRange(symbol.getValue(), 1, 4));
+                                    node.setAstType(ASTType.ObjectRead);
+                                    break type;
+                                } else if (symbol.getValue()[0] == 3) {
+                                    // Type param write
+                                    node.setSecondPassVal(Arrays.copyOfRange(symbol.getValue(), 1, 4));
+                                    node.setAstType(ASTType.ObjectWrite);
+                                    break type;
+                                }
+                            }
+                        }
+                    }
+                    if (BuiltInFunctions.isBuildInFunction(node.getValue())) {
+                        node.setSecondPassVal(new int[]{BuiltInFunctions.getBuiltInFunctionValue(node.getValue())});
+                        node.setAstType(ASTType.BuiltInCall);
+                        break type;
+                    }
+                }
+                case RefUse: {
+                    // TODO:
+                    break type;
+                }
+                case Var: {
+                    // TODO:
+                    break type;
+                }
+                default:
+                    // eventually throw error here to detect invalid node-types
+                    throw new RuntimeException("Compiler error - invalid use in AST.");
+            }
+        }
+
+        for (var child : node.getStatements()) {
+            secondPass(child, symbolScopes, types);
         }
     }
 

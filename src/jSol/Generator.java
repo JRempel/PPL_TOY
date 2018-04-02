@@ -1,8 +1,5 @@
 package jSol;
 
-import java.util.List;
-import java.util.Map;
-
 public class Generator {
 
     public static void main(String[] args) {
@@ -177,74 +174,8 @@ public class Generator {
         n033.setValue("main");
         n000.addStatement(n033);
 
-        //root.print();
-        toIntermediateAST(root.getRoot());
-
         root.print();
-    }
-
-    //Destructive conversion to intermediate AST
-    private static void toIntermediateAST(AST root) {
-
-        //If node has child statements
-        if (root.getStatements().size() > 0) {
-            //For each child
-            for (AST node : root.getStatements()) {
-                toIntermediateAST(node);
-            }
-        } else {
-
-            if (root.getAstType().equals(ASTType.Int) || root.getAstType().equals(ASTType.String)){
-                return;
-            }
-
-            String targetValue = root.getValue();
-            boolean found = false;
-            AST cursor = root;
-
-            while (!found && cursor != null) {
-
-                //Look for the variable in the current symbol table
-                for (Map.Entry<String, int[]> entry : cursor.getSymbols()) {
-                    System.out.println(root.getAstType() + " looking for " + root.getValue());
-                    System.out.println("is it " + entry.getKey() + "?");
-                    //If the variable is found in the symbol table
-                    if (entry.getKey().equals(targetValue)) {
-                        //Set root type to LoadOrCall and replace value with new value from symbol table
-                        if (root.getAstType() == ASTType.VarUse) {
-                            root.setAstType(ASTType.LoadOrCall);
-                        }
-                        if (root.getAstType() == ASTType.RefUse) {
-                            root.setAstType(ASTType.ObjectRead);
-                        }
-
-                            String newValue = "";
-                            for (int i : entry.getValue()) {
-                                newValue += Integer.toString(i) + ",";
-                            }
-                            newValue = newValue.substring(0, newValue.length() - 1);
-                            root.setValue(newValue);
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    cursor = cursor.getParent();
-
-                }
-
-                if (!found && cursor == null) {
-                    int builtInFunctionValue = BuiltInFunctions.getBuiltInFunctionValue(root.getValue());
-                    if (builtInFunctionValue != -1) {
-                        root.setAstType(ASTType.BuiltInCall);
-                        root.setValue(Integer.toString(builtInFunctionValue));
-                    } else {
-                        throw new RuntimeException("Could not resolve symbol (" + root.getValue() + ")");
-                    }
-                }
-
-            }
-        }
 
     }
+}
 
