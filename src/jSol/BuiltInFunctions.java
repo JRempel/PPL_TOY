@@ -17,7 +17,8 @@ public enum BuiltInFunctions {
     GET_CHAR_F(50, "getCharF"), PUT_CHAR_F(51, "putCharF"), GET_STR_F(52, "getStrF"),
     PUT_STR_F(53, "putStrF"), NL_F(54, "nlF"), GET_ARGS(55, "getArgs"), DUP(56, "dup"),
     DUP_N(57, "dupn"), DROP(58, "drop"), DROP_N(59, "dropn"), ROT_L(60, "rotl"), ROT_LN(61, "rotln"),
-    ROT_R(62, "rotr"), ROT_RN(63, "rotrn"), SWAP(64, "swap"), SWAP_N(65, "swapn");
+    ROT_R(62, "rotr"), ROT_RN(63, "rotrn"), SWAP(64, "swap"), SWAP_N(65, "swapn"), STACK(66, "stack"),
+    SUSPEND(67, "suspend"), RESUME(68, "resume"), TO_COROUTINET(69, ">>"), FROM_COROUTINE(70, "<<");
 
     private int val;
     private String identifier;
@@ -94,6 +95,11 @@ public enum BuiltInFunctions {
        put(ROT_RN.identifier, ROT_RN);
        put(SWAP.identifier, SWAP);
        put(SWAP_N.identifier, SWAP_N);
+       put(STACK.identifier, STACK);
+       put(SUSPEND.identifier, SUSPEND);
+       put(RESUME.identifier, RESUME);
+       put(TO_COROUTINET.identifier, TO_COROUTINET);
+       put(FROM_COROUTINE.identifier, FROM_COROUTINE);
     }};
 
     public static boolean isBuildInFunction(String maybe) {
