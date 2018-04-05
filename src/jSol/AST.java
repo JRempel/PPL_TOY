@@ -16,12 +16,11 @@ public class AST {
     private ASTType astType;
 
     AST(ASTType type) {
+        astType = type;
         symbols = new ArrayList<>();
         statements = new ArrayList<>();
         value = "";
         secondPassVal = null;
-        astType = type;
-
     }
 
     public String getValue() {
@@ -105,6 +104,53 @@ public class AST {
                 System.out.println(String.join("", Collections.nCopies(tabs + 1, "  ")) + "Statements: ");
                 for (var s : statements) {
                     s.print(tabs + 2);
+                }
+                break;
+        }
+    }
+
+    public void generatorPrint(){
+        generatorPrint(0);
+    }
+
+    //Prints AST node value instead of secondPassVal to allow inspection for manually created AbstractSyntaxTrees.
+    private void generatorPrint(int tabs) {
+        switch (this.getAstType()) {
+            case Int:
+            case Char:
+            case Float:
+            case String:
+            case RefUse:
+            case VarUse:
+//            case Var:
+            case Symbol:
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
+                break;
+            case LoadOrCall:
+            case ObjectCons:
+            case ObjectRead:
+            case ObjectWrite:
+            case BuiltInCall:
+            case ObjectConsRef:
+            case ObjectReadRef:
+            case ObjectWriteRef:
+            case Load:
+            case Var:
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name() + " = " + value);
+                break;
+            case Program:
+            case Function:
+            case CoRoutine:
+            case Lambda:
+                System.out.println(String.join("", Collections.nCopies(tabs, "  ")) + this.getAstType().name());
+                System.out.print(String.join("", Collections.nCopies(tabs + 1, "  ")) + "Symbols: ");
+                for (var s : symbols) {
+                    System.out.print(s.getKey() + "(" + Arrays.toString(s.getValue()) + ") ");
+                }
+                System.out.println();
+                System.out.println(String.join("", Collections.nCopies(tabs + 1, "  ")) + "Statements: ");
+                for (var s : statements) {
+                    s.generatorPrint(tabs + 2);
                 }
                 break;
         }

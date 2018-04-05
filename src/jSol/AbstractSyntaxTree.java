@@ -23,6 +23,7 @@ public class AbstractSyntaxTree {
     private ArrayList<String> strings;
     private ArrayList<Map.Entry<String, List<String>>> types;
 
+
     AbstractSyntaxTree() {
         strings = new ArrayList<>();
         types = new ArrayList<>();
@@ -548,11 +549,32 @@ public class AbstractSyntaxTree {
         return this;
     }
 
+    //Print types from types data structure
+    public AbstractSyntaxTree generatorPrint() {
+        System.out.println("Strings: ");
+        for (var s : strings) {
+            System.out.println("  " + s);
+        }
+        System.out.println("Types: ");
+        for (var type : types) {
+            System.out.print("\t" + type.getKey());
+        }
+        System.out.println();
+        System.out.println("Abstract Syntax Tree: ");
+        root.generatorPrint();
+        return this;
+    }
+
     public void addString(String s) {
         getStrings().add(s);
     }
 
-    public void addType(String t) {
+    public void addType(String t){
         getStrings().add(t);
+    }
+
+    public void generatorAddType(String t) {
+        Map.Entry<String,List<String>> typeMap = new AbstractMap.SimpleEntry<String,List<String>>(t,null);
+        getTypes().add(typeMap);
     }
 }
