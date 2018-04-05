@@ -1,11 +1,7 @@
 package jSol;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AST {
 
@@ -14,6 +10,7 @@ public class AST {
     private String value;
     private int[] secondPassVal;
     private ASTType astType;
+    private UUID id = UUID.randomUUID();
 
     AST(ASTType type) {
         astType = type;
@@ -25,6 +22,14 @@ public class AST {
 
     public String getValue() {
         return value;
+    }
+
+    public Integer [] tryValueAsIntegerArray(){
+        String [] values = getValue().split(",");
+        return Arrays.asList(values).stream()
+                .map(s -> Integer.parseInt(s))
+                .toArray(Integer []::new);
+
     }
 
     public void setValue(String value) {
@@ -49,6 +54,10 @@ public class AST {
 
     public void print() {
         print(0);
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public ASTType getAstType() {
@@ -155,4 +164,6 @@ public class AST {
                 break;
         }
     }
+
+
 }

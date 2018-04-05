@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ public class TypeBlock {
 
     int length;
     byte [] byteLength = new byte [2];
-    HashMap<String, byte[]> types = new HashMap<String, byte[]>();
+    LinkedHashMap<String, byte[]> types = new LinkedHashMap<String, byte[]>();
 
 
     public TypeBlock (AbstractSyntaxTree tree){

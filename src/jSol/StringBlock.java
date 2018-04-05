@@ -3,16 +3,13 @@ package jSol;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class StringBlock {
 
     int length;
     byte[] byteLength = new byte[2];
-    HashMap<String, byte[]> strings = new HashMap<String, byte[]>();
+    LinkedHashMap<String, byte[]> strings = new LinkedHashMap<String, byte[]>();
 
     public StringBlock (AbstractSyntaxTree tree){
         setLength(tree.getStrings().size());

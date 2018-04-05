@@ -573,8 +573,8 @@ public class AbstractSyntaxTree {
         getStrings().add(t);
     }
 
-    public void generatorAddType(String t) {
-        Map.Entry<String,List<String>> typeMap = new AbstractMap.SimpleEntry<String,List<String>>(t,null);
+    public void generatorAddType(String t, ArrayList<String> typeMembers) {
+        Map.Entry<String,List<String>> typeMap = new AbstractMap.SimpleEntry<String,List<String>>(t,typeMembers);
         getTypes().add(typeMap);
     }
 }
