@@ -36,7 +36,10 @@ public class ByteCode {
         {
             //Write String Block
             dout.write(getStringBlock().getRawBytes());
+            dout.write(getTypeBlock().getRawBytes());
 
+            dout.flush();
+            fout.flush();
 
         }catch(IOException e){
             e.printStackTrace();
@@ -67,5 +70,14 @@ public class ByteCode {
 
     public void setCodeBlock(CodeBlock codeBlock) {
         this.codeBlock = codeBlock;
+    }
+
+    //TODO - Change this exception to something more submittable....if we remember to do so....
+    public static void fuckUTF8 (String s){
+        for (char c: s.toCharArray()){
+            if (Character.compare('\u007F',c) < 0 ){
+                throw new RuntimeException("Respectfully, you and your UTF-8 characters can fellate a collection of phalluses :)");
+            }
+        }
     }
 }

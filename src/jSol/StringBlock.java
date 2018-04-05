@@ -25,7 +25,7 @@ public class StringBlock {
         return length;
     }
 
-    public void setLength(int length) {
+    private void setLength(int length) {
         this.length = length;
 
         try(
@@ -35,8 +35,8 @@ public class StringBlock {
         {
 
             out.writeChar(length);
-
             this.byteLength = bytes.toByteArray();
+
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -50,6 +50,7 @@ public class StringBlock {
                 DataOutputStream out = new DataOutputStream(bytes);
                 ){
 
+                ByteCode.fuckUTF8(s);
                 byte[] ascii = s.getBytes("UTF-8"); //first 128 UTF-8 code points match 1-to-1 with ASCII
                 out.write(ascii);
                 out.write(0x0); //Pad with '\0'
