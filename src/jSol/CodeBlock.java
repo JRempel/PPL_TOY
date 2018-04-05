@@ -8,6 +8,10 @@ import java.util.*;
 
 public class CodeBlock {
 
+    //Program Data
+    StringBlock stringBlock;
+    TypeBlock typeBlock;
+
 
     //Preamble Data
     int preambleLength;
@@ -16,9 +20,11 @@ public class CodeBlock {
 
     LinkedHashMap<UUID, ArrayList<Instruction>> annotatedInstructions = new LinkedHashMap<UUID, ArrayList<Instruction>>();
 
-    public CodeBlock (AbstractSyntaxTree tree){
+    public CodeBlock (AbstractSyntaxTree tree, StringBlock stringBlock, TypeBlock typeBlock){
 
         AST program = tree.getRoot();
+        this.stringBlock = stringBlock;
+        this.typeBlock = typeBlock;
 
         if (program == null){
             throw new RuntimeException("Cannot generate code block! Root of abstract syntax tree is null!");
@@ -116,17 +122,67 @@ public class CodeBlock {
         }
     }
 
-    public ArrayList<Instruction> functionByteCode(AST node){
-        if (node.getAstType() != ASTType.Function){
-            throw new RuntimeException("Cannot generate function bytecode! AST node is not of type function!");
+    public void byteCode(AST node, AbstractSyntaxTree tree) throws IOException{
+
+        for (AST child: node.getStatements()){
+            switch (child.getAstType().id()){
+                case "Var":
+                        //Extract the type of the variable
+                        int varSymbolType = Integer.parseInt(child.getValue());
+
+                        //Find the corresponding type symbol
+                        AST startingPoint = node;
+                        Map.Entry<String,int[]> targetTypeSymbol = null;
+
+                        //While
+                        while (targetTypeSymbol == null && //you haven't found the TypeSymbol
+                                startingPoint != null){ //And you still have places to look
+
+                            //Keep looking
+                            targetTypeSymbol = searchScopeForType(varSymbolType, startingPoint);
+                            startingPoint = startingPoint.getParent();
+                        }
+
+                        if (startingPoint == null){ //If the type could not be found
+                            throw new RuntimeException("Could not find type with id " + varSymbolType + " in program scope!");
+                        }
+
+                        //If you're here you you've found the type
+                        //Use the type symbol definition to make a user defined object and push it to the data stack
+                        MOB(targetTypeSymbol, node.getId());
+
+                        //Now store this newly created object in your stack frame at the id described by variable symbol;
+                        STO(varSymbol, node.getId());
+
+                    break;
+                case "Function":
+                    //Recurse through function AST Nodes
+
+                    byteCode(child, tree);
+                    break;
+                case "Int":
+                    INT(Integer.parseInt(child.getValue()), node.getId());
+                    break;
+                case "LoadOrCall":
+
+                    break;
+            }
         }
 
-        ArrayList<Instruction> result = new ArrayList<Instruction>();
-
-        
 
 
-        return result;
+
+    }
+
+    private Map.Entry<String, int[]> searchScopeForType (int typeId, AST searchNode){
+        for (Map.Entry<String,int[]> localScopeSymbol: searchNode.getSymbols()){
+            if (localScopeSymbol.getValue()[0] == 1 && //If a local symbol is a type definition
+                    localScopeSymbol.getValue()[1] == typeId){ //And it's typeId matches yours
+                return localScopeSymbol;
+            }
+        }
+
+        return null;
     }
 
     /*

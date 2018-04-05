@@ -10,6 +10,7 @@ public class AST {
     private String value;
     private int[] secondPassVal;
     private ASTType astType;
+    private AST parent;
     private UUID id = UUID.randomUUID();
 
     AST(ASTType type) {
@@ -18,6 +19,15 @@ public class AST {
         statements = new ArrayList<>();
         value = "";
         secondPassVal = null;
+
+    }
+
+    public AST getParent() {
+        return parent;
+    }
+
+    private void setParent(AST parent) {
+        this.parent = parent;
     }
 
     public String getValue() {
@@ -49,6 +59,7 @@ public class AST {
     }
 
     public void addStatement(AST statement) {
+        statement.setParent(this);
         statements.add(statement);
     }
 
