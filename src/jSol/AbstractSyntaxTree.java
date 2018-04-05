@@ -335,16 +335,18 @@ public class AbstractSyntaxTree {
                     case KwId: {
                         value = tree.getContent();
                         AST id;
-                        if (!typeTable.contains(value) && !stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
-                            stringTable.add(value);
+                        if (!stringTable.contains(value) && !BuiltInFunctions.isBuildInFunction(value)) {
+                            boolean isType = false;
+                            for (var entry : typeTable) {
+                                if (entry.getKey().equals(value)) {
+                                    isType = true;
+                                }
+                            }
+                            if (!isType) {
+                                stringTable.add(value);
+                            }
                         }
-                        // TODO: Come back to this depending on secondPass result(s)
-//                        if (BuiltInFunctions.isBuildInFunction(value)) {
-//                            id = new AST(ASTType.BuiltInCall);
-//                            value = "" + BuiltInFunctions.getBuiltInFunctionValue(value);
-//                        } else {
                         id = new AST(ASTType.VarUse);
-//                        }
                         id.setValue(value);
                         parent.addStatement(id);
                         return parent;
