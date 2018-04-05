@@ -1,5 +1,8 @@
 package jSol;
 
+import javax.xml.crypto.Data;
+import java.io.*;
+
 public class Generator {
 
     public static void main(String[] args) {
@@ -224,6 +227,14 @@ public class Generator {
 
         root.generatorPrint();
 
+        ByteCode byteCode = new ByteCode(root);
+        byteCode.generate("test.byte");
+
+
+
     }
+
+
+
 }
 
