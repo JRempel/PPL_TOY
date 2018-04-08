@@ -6,7 +6,7 @@ public class Compiler {
 
     public static void main(String[] args) {
         // TODO : validate args
-        compile("vector.toy");
+        compile("coercion.toy");
     }
 
     private static void compile(String path) {

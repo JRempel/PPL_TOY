@@ -114,7 +114,7 @@ public class AbstractSyntaxTree {
                             paramUpdate[2] = numTypeParam;
                             tempType.setValue(paramUpdate);
                             typeAST.addSymbol(tempType.getKey(), tempType.getValue());
-                            int typeFields = 0;
+                            int typeFields = -1;
                             var paramList = new ArrayList<String>();
                             for (var tempSymbol : tempSymbolListAfterTempType) {
                                 var tempValue = tempSymbol.getValue();
@@ -451,7 +451,9 @@ public class AbstractSyntaxTree {
                                     break type;
                                 } else if (symbol.getValue()[0] == 2) {
                                     // Type param read
-                                    node.setSecondPassVal(Arrays.copyOfRange(symbol.getValue(), 1, 4));
+                                    int[] temp = Arrays.copyOfRange(symbol.getValue(), 1, 4);
+                                    temp[1]++;
+                                    node.setSecondPassVal(temp);
                                     node.setAstType(ASTType.ObjectRead);
                                     break type;
                                 } else if (symbol.getValue()[0] == 3) {
