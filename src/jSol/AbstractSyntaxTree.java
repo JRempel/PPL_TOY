@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static jSol.ASTType.Function;
-import static jSol.ASTType.LoadOrCall;
 import static jSol.ASTType.Var;
 import static jSol.ASTType.VarUse;
 import static jSol.Term.*;
@@ -354,7 +353,13 @@ public class AbstractSyntaxTree {
                     case KwTypeId: {
                         AST unknownParent = new AST(ASTType.UNKNOWN);
                         value = tree.getContent();
-                        if (!typeTable.contains(value)) {
+                        boolean typeTableContainsValue = false;
+                        for (var entry : typeTable) {
+                            if (entry.getKey().equals(value)) {
+                                typeTableContainsValue = true;
+                            }
+                        }
+                        if (!typeTableContainsValue) {
                             var params = new AbstractMap.SimpleEntry<String, List<String>>(value, new ArrayList<>());
                             typeTable.add(params);
                         }
@@ -571,12 +576,12 @@ public class AbstractSyntaxTree {
         getStrings().add(s);
     }
 
-    public void addType(String t){
+    public void addType(String t) {
         getStrings().add(t);
     }
 
     public void generatorAddType(String t, ArrayList<String> typeMembers) {
-        Map.Entry<String,List<String>> typeMap = new AbstractMap.SimpleEntry<String,List<String>>(t,typeMembers);
+        Map.Entry<String, List<String>> typeMap = new AbstractMap.SimpleEntry<>(t, typeMembers);
         getTypes().add(typeMap);
     }
 }

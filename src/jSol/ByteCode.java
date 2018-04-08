@@ -11,29 +11,26 @@ public class ByteCode {
     TypeBlock typeBlock;
     CodeBlock codeBlock;
 
-    public ByteCode (AbstractSyntaxTree tree){
+    public ByteCode(AbstractSyntaxTree tree) {
         this.stringBlock = new StringBlock(tree);
         this.typeBlock = new TypeBlock(tree);
-        this.codeBlock = new CodeBlock(tree,stringBlock,typeBlock);
+        this.codeBlock = new CodeBlock(tree, stringBlock, typeBlock);
     }
 
-    public void generate(String filename){
+    public void generate(String filename) {
         //Report null pointers if they exist
-        if (    stringBlock == null ||
-                typeBlock == null ||
-                codeBlock == null){
-            throw new RuntimeException ("Cannot generate bytecode, the following blocks are null:\n" +
-                    (stringBlock == null? "String Block\n": "") +
-                    (typeBlock == null? "Type Block": "") +
-                    (codeBlock == null? "Code Block": "")
+        if (stringBlock == null || typeBlock == null || codeBlock == null) {
+            throw new RuntimeException("Cannot generate bytecode, the following blocks are null:\n" +
+                    (stringBlock == null ? "String Block\n" : "") +
+                    (typeBlock == null ? "Type Block" : "") +
+                    (codeBlock == null ? "Code Block" : "")
             );
         }
-        File f = new File (filename);
+        var file = new File(filename);
         try (
-                FileOutputStream fout = new FileOutputStream(f);
-                DataOutputStream dout = new DataOutputStream(fout);
-                )
-        {
+                var fout = new FileOutputStream(file);
+                var dout = new DataOutputStream(fout);
+        ) {
             //Write String Block
             dout.write(getStringBlock().getRawBytes());
             dout.write(getTypeBlock().getRawBytes());
@@ -42,7 +39,7 @@ public class ByteCode {
             dout.flush();
             fout.flush();
 
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -74,9 +71,9 @@ public class ByteCode {
     }
 
     //TODO - Change this exception to something more submittable....if we remember to do so....
-    public static void fuckUTF8 (String s){
-        for (char c: s.toCharArray()){
-            if (Character.compare('\u007F',c) < 0 ){
+    public static void fuckUTF8(String s) {
+        for (char c : s.toCharArray()) {
+            if (Character.compare('\u007F', c) < 0) {
                 throw new RuntimeException("Respectfully, you and your UTF-8 characters can fellate a collection of phalluses :)");
             }
         }

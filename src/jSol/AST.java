@@ -1,7 +1,6 @@
 package jSol;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class AST {
 
@@ -34,13 +33,13 @@ public class AST {
         return value;
     }
 
-    public Integer [] tryValueAsIntegerArray(){
-        String [] values = getValue().split(",");
-        return Arrays.asList(values).stream()
-                .map(s -> Integer.parseInt(s))
-                .toArray(Integer []::new);
-
-    }
+//    public Integer [] tryValueAsIntegerArray(){
+//        String [] values = getValue().split(",");
+//        return Arrays.asList(values).stream()
+//                .map(s -> Integer.parseInt(s))
+//                .toArray(Integer []::new);
+//
+//    }
 
     public void setValue(String value) {
         this.value = value;

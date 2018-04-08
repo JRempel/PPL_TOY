@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class Instruction {
 
@@ -16,7 +15,7 @@ public class Instruction {
 
 
     private OpCode opCode;
-    private ArrayList<byte[]> paramValues = new ArrayList<byte[]>();
+    private ArrayList<byte[]> paramValues = new ArrayList<>();
     private byte [] address;
     private byte [] code;
 

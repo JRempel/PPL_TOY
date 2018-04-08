@@ -1,7 +1,5 @@
 package jSol;
 
-import javax.xml.crypto.Data;
-import java.io.*;
 import java.util.ArrayList;
 
 public class Generator {
@@ -20,7 +18,7 @@ public class Generator {
         root.addString("main");
         root.addString("len(3,4) = ");
         //Types
-        ArrayList<String> members = new ArrayList<String>();
+        ArrayList<String> members = new ArrayList<>();
         members.add("x");
         members.add("y");
         root.generatorAddType("vector", members);
