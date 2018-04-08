@@ -131,7 +131,6 @@ public class AbstractSyntaxTree {
                                     tempValue[2] = typeFields;
                                     tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                                 }
-                                // TODO: SWAPPED THESE TWO VALUES... NO DIFF???
                                 typeAST.addSymbol(tempSymbol.getKey(), tempValue);
                                 typeFields += (tempValue[0] == 2) ? 1 : 0;
                             }
@@ -192,7 +191,6 @@ public class AbstractSyntaxTree {
                             tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                         }
 
-                        // TODO: SWAPPED THESE TWO VALUES... NO DIFF???
                         typeAST.addSymbol(tempSymbol.getKey(), tempValue);
                         typeFields += (tempValue[0] == 2) ? 1 : 0;
                     }
