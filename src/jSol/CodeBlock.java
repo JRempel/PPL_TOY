@@ -72,8 +72,6 @@ public class CodeBlock {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        System.out.println(1);
     }
 
     private void resolveAddressesAndBuildBodyByteCode() {

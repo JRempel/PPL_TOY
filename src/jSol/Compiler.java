@@ -1,25 +1,33 @@
 package jSol;
 
 public class Compiler {
+    private static String toyType = ".toy";
+    private static String byteCodeType = ".byte";
+
     public static void main(String[] args) {
-        compile("./closures.toy");
+        compile("vector.toy");
     }
 
     private static void compile(String path) {
-        // TODO: Only print errors, remove tree/token printer
-        // Lexer
+        String outputPath = path;
+        if (path.endsWith(toyType)) {
+            var strb = new StringBuilder(path);
+            int index = strb.lastIndexOf(toyType);
+            strb.replace(index, toyType.length() + index, byteCodeType);
+            outputPath = strb.toString();
+        } else {
+            System.out.println("Please provide a '.toy' file.");
+            System.exit(1);
+        }
         InputStream.from(path)
                 .unComment()
                 .splitterate()
                 .tokenize()
-                //.reportInvalid()
-                //Parser
+                .reportInvalid()
                 .toParseTree()
-//                .print()
-                //To AST
                 .toAST()
                 .secondPass()
-                .print();
-        // To AST
+                .toByteCode(outputPath);
+        System.out.println("Byte-code file written to: " + outputPath);
     }
 }

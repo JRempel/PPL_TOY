@@ -9,7 +9,6 @@ import java.util.Set;
 
 import static jSol.ASTType.Function;
 import static jSol.ASTType.Var;
-import static jSol.ASTType.VarUse;
 import static jSol.Term.*;
 
 public class AbstractSyntaxTree {
@@ -539,6 +538,11 @@ public class AbstractSyntaxTree {
                 varsInScope.add(child.getValue());
             }
         }
+    }
+
+    public void toByteCode(String outputFileName) {
+        ByteCode byteCode = new ByteCode(this);
+        byteCode.generate(outputFileName);
     }
 
     public AbstractSyntaxTree print() {

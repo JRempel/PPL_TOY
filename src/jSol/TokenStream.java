@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TokenStream {
+    private static boolean debugMode = false;
     private static String TOKEN_FORMAT = "%s(%s) ";
     private static String INVALID_TOKEN_MESSAGE = "\n\nInvalid token '%s' on line %d in position %d.";
     private static List<String> illegalKeywords = new ArrayList<>() {{
@@ -25,6 +26,7 @@ public class TokenStream {
 
     /**
      * Create a TokenStream from a given InputSteam.
+     *
      * @param input - the InputStream to convert.
      */
     public static TokenStream fromInputStream(InputStream input) {
@@ -62,7 +64,7 @@ public class TokenStream {
             if (x == Token.INVALID) {
                 System.out.println(String.format(INVALID_TOKEN_MESSAGE, x.content(), x.line(), x.position()));
                 System.exit(1);
-            } else {
+            } else if (debugMode) {
                 System.out.print(String.format(TOKEN_FORMAT, x.name().toLowerCase(), x.content()));
             }
         });
