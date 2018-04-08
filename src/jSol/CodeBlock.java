@@ -196,6 +196,18 @@ public class CodeBlock {
                 case ObjectCons:
                     MOB(child, node);
                     break;
+                case RefUse:
+                case VarUse:
+                case ObjectConsRef:
+                case ObjectReadRef:
+                case ObjectWriteRef:
+                case UNKNOWN:
+                case Program:
+                    System.out.println("Error: second-pass AST incomplete or has errors...");
+                    System.exit(1);
+                case CoRoutine:
+                    System.out.println("Co-Routine feature not implemented yet...");
+                    System.exit(1);
             }
         }
 
