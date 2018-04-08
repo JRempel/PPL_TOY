@@ -203,7 +203,7 @@ public class CodeBlock {
                 case ObjectWriteRef:
                 case UNKNOWN:
                 case Program:
-                    System.out.println("Error: second-pass AST incomplete or has errors...");
+                    System.out.println("Error: second-pass AST incomplete or has errors... Type error: " + child.getAstType());
                     System.exit(1);
                 case CoRoutine:
                     System.out.println("Co-Routine feature not implemented yet...");
