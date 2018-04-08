@@ -12,10 +12,14 @@ public class Instruction {
     private ByteArrayOutputStream annotationBytes;
     private DataOutputStream annotationOut;
 
+    private Instruction childMFR;
+
 
     private OpCode opCode;
     private ArrayList<byte[]> paramValues = new ArrayList<byte[]>();
-    private byte [] address = new byte [4];
+    private byte [] address;
+    private byte [] code;
+
     private boolean annotated = false;
 
     /*
@@ -31,6 +35,8 @@ public class Instruction {
     private int [] symbolIndexes;
 
     public Instruction (OpCode opCode){
+        nodeValueIndexes = new int [opCode.paramCount()];
+        symbolIndexes = new int [opCode.paramCount()];
         //All instructions have opCode as first parameter
         try {
             this.opCode = opCode;
@@ -58,18 +64,31 @@ public class Instruction {
         return address;
     }
 
-    public void setAddress(byte[] address) {
-        this.address = address;
+    public void setAddress(int address) {
+        try(
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                DataOutputStream out = new DataOutputStream(bytes);
+                ){
+            out.writeInt(address);
+            out.flush();
+            this.address = bytes.toByteArray();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 
     public byte [] byteCode (){
+        if (code != null){
+            return code;
+        }
         //Error Handling
-        if (paramValues.size() != getOpCode().size()){
+        if (paramValues.size() != getOpCode().paramCount()){
             throw new RuntimeException(
                     "Cannot generate instruction bytecode, " +
-                    (paramValues.size() > getOpCode().size()?
+                    (paramValues.size() > getOpCode().paramCount()?
                             "too many parameters!" : "too few paramters!" ) + "\n" +
-                    getOpCode().name() + " expects " +getOpCode().paramCount() +
+                    getOpCode().name() + " expects " + getOpCode().paramCount() +
                     " but got " + Integer.toString(paramValues.size()));
         }
 
@@ -79,12 +98,13 @@ public class Instruction {
                 DataOutputStream out = new DataOutputStream(bytes);
                 ){
 
-                for (byte [] fragment: getParamValues()){
-                    out.write(fragment);
-                }
+                    for (byte [] fragment: getParamValues()){
+                        out.write(fragment);
+                    }
 
                 out.flush();
-                return bytes.toByteArray();
+                this.code = bytes.toByteArray();
+                return code;
 
         }catch (IOException e){
             e.printStackTrace();
@@ -155,20 +175,28 @@ public class Instruction {
     }
 
     private void processData (Object data) throws IOException{
-        if (data.getClass().isArray() || data.getClass().equals(byte.class)) {
-            annotateByteArray((byte[]) data);
+        if (data.getClass().isArray()){
+            annotateByteArray((byte[])data);
+        }
+
+        if (data.getClass().equals(byte.class) || data.getClass().equals(Byte.class)) {
+            annotateByte((byte)data);
         }
 
         if (data.getClass().equals(int.class) || data.getClass().equals(Integer.class)){
             annotateInt((int) data);
         }
 
-        if (data.getClass().equals(float.class)){
+        if (data.getClass().equals(float.class) || data.getClass().equals(Float.class)){
             annotateFloat((float)data);
         }
     }
 
     //Type Specific ByteCode Rules
+    private void annotateByte(byte b) throws IOException{
+        annotationOut.write(b);
+    }
+
     private void annotateByteArray (byte [] data) throws IOException{
         annotationOut.write(data);
     }
@@ -206,8 +234,6 @@ public class Instruction {
 
         //If all parameters have been annotated, clean up
         if (paramValues.size() == getOpCode().size()){
-            annotationBytes = null;
-            annotationOut = null;
             annotated = true;
         }
     }
@@ -222,5 +248,11 @@ public class Instruction {
         annotationOut = new DataOutputStream(annotationBytes);
     }
 
+    public Instruction getChildMFR() {
+        return childMFR;
+    }
 
+    public void setChildMFR(Instruction childMFR) {
+        this.childMFR = childMFR;
+    }
 }

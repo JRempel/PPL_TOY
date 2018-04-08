@@ -14,7 +14,7 @@ public class ByteCode {
     public ByteCode (AbstractSyntaxTree tree){
         this.stringBlock = new StringBlock(tree);
         this.typeBlock = new TypeBlock(tree);
-        this.codeBlock = new CodeBlock(tree);
+        this.codeBlock = new CodeBlock(tree,stringBlock,typeBlock);
     }
 
     public void generate(String filename){
@@ -37,6 +37,7 @@ public class ByteCode {
             //Write String Block
             dout.write(getStringBlock().getRawBytes());
             dout.write(getTypeBlock().getRawBytes());
+            dout.write(getCodeBlock().getRawBytes());
 
             dout.flush();
             fout.flush();

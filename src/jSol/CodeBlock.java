@@ -1,5 +1,7 @@
 package jSol;
 
+import org.w3c.dom.Node;
+
 import javax.xml.crypto.Data;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -17,8 +19,17 @@ public class CodeBlock {
     int preambleLength;
     byte [] preambleBytes;
     ArrayList<OpCode> preambleOperations = new ArrayList<OpCode>();
+    ArrayList<Instruction> topDefInstructions = new ArrayList<Instruction>();
+    int mainOffset = -1;
 
-    LinkedHashMap<UUID, ArrayList<Instruction>> annotatedInstructions = new LinkedHashMap<UUID, ArrayList<Instruction>>();
+    ArrayList<NodeInstructions> annotatedInstructions = new ArrayList<NodeInstructions>();
+    ArrayList<NodeInstructions> annotatedPreambleInstructions = new ArrayList<NodeInstructions>();
+    ArrayList<NodeInstructions> annotatedTopLevelInstructions = new ArrayList<NodeInstructions>();
+
+    byte[] bodyBytes;
+
+    byte [] blockBytes;
+
 
     public CodeBlock (AbstractSyntaxTree tree, StringBlock stringBlock, TypeBlock typeBlock){
 
@@ -37,8 +48,74 @@ public class CodeBlock {
         //Need to determine preamble length before generating to determine addresses for MCL instructions
         this.preambleLength = preambleLength(program);
 
-        //Generate preamble
+
+        //Generate ByteCode structure
+        try {
+
+            for (AST topNode : program.getStatements()) {
+                if (topNode.getAstType() == ASTType.Function) {
+                    byteCode(topNode,0);
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        //Generate Body byteCode
+        resolveAddressesAndBuildBodyByteCode();
+        //Generate Preamble byteCode
         generatePreamble(program);
+
+        try (
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                DataOutputStream out = new DataOutputStream(bytes);
+                ){
+            out.write(preambleBytes);
+            out.write(bodyBytes);
+            out.flush();
+
+            this.blockBytes = bytes.toByteArray();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        System.out.println(1);
+    }
+
+    private void resolveAddressesAndBuildBodyByteCode(){
+
+            int counter = preambleLength;
+
+            for (NodeInstructions ni: annotatedInstructions){
+                for (Instruction i: ni.getInstructions()){
+                    i.setAddress(counter);
+
+                    counter+= i.getOpCode().size();
+
+                }
+            }
+
+
+                try(
+                    ByteArrayOutputStream bytes =  new ByteArrayOutputStream();
+                    DataOutputStream out = new DataOutputStream(bytes);
+                ){
+
+                for (NodeInstructions ni: annotatedInstructions){
+                    for(Instruction i: ni.getInstructions()){
+                        if (i.getOpCode() == OpCode.MCL){
+                            i.annotateParameter(i.getChildMFR().getAddress());
+                            i.byteCode();
+                        }
+                        out.write(i.byteCode());
+                    }
+                }
+
+                    out.flush();
+                    this.bodyBytes = bytes.toByteArray();
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
     }
 
     private void generatePreamble(AST program){
@@ -49,70 +126,26 @@ public class CodeBlock {
                 ){
 
                 //Make Program/Root Frame
-                out.write(MFR(program));
+                out.write(MFR(program, program,-1).byteCode());
+                int variableOffsetCounter = -1;
+                int mainOffsetCounter = -1;
+                for (int i = 0; i < program.getSymbols().size();i++){
+                    Map.Entry<String, int[]> symbol = program.getSymbols().get(i);
+                    mainOffsetCounter++;
+                    if (symbol.getValue()[0] == 0){
+                        variableOffsetCounter++;
+                        if (symbol.getKey().equals("main")){
+                            this.mainOffset = mainOffsetCounter;
+                        }
+                        Instruction closureInstruction = MCL(program);
+                        closureInstruction.annotateParameter(annotatedTopLevelInstructions.get(variableOffsetCounter).getInstructions().get(0).getAddress());
+                        out.write(closureInstruction.byteCode());
 
-                for (Map.Entry<String, int[]> symbol: program.getSymbols()){
-
-                    switch (symbol.getValue()[0]){
-                        //Symbol is a variable
-                        /*Assumption: Any variable discovered in the preamble must be a function.
-
-                            Supporting arguments from most logically compelling to 'I choose to believe'
-
-                            1)  Language specification states that functions are the only ones allowed to define
-                                variables and other, nested functions.
-
-                            2)  Given that TOY checks function closures for variable defitions, where would a
-                                global primitive variable even go so it could be retrieved? Strings block...?
-                                That feels wrong.
-
-                            3)  I don't see how I could tell a function apart from a primitive variable given just
-                                symbol information. I know at least a top level 'main' function has to exist
-                                therefore making this assumption really is the only way I'd know how to proceed next.
-
-                            4)  None of the vm_test toy programs define a global variable at this level that isn't
-                                a function.
-
-                            5)  Norbert likes functions, he would define a function that just returns a primitive.
-
-                            6)  I choose to believe
-
-                            Also given the fact that TOY checks local closures for variable definitions
-                          */
-                        /*TODO - Verify assuption
-                            PROOF:
-                                TOY Language Grammar definition lists program as starting non-terminal.
-                                The only Program production is Program -> TopDef
-                                The only TopDef productions are:
-                                    TopDef -> FunDef
-                                    TopDef -> CofunDef
-                                    TopDef -> TypeDef
-                                No VarDef in sight. We gucci.
-                         */
-                        case 0:
-
-
-                            break;
-                        //Symbol is a type
-                        case 1:
-                            out.write(MOB(symbol,program.getId()));
-                            preambleOperations.add(OpCode.MOB);
-                            break;
-                        //Symbol is a field read from user defined type
-                        case 2:
-                            out.write(RDF(symbol,program.getId()));
-                            preambleOperations.add(OpCode.RDF);
-                            break;
-                        //Symbol is a field write to a user defined type
-                        case 3:
-                            out.write(WRF(symbol,program.getId()));
-                            preambleOperations.add(OpCode.WRF);
-                            break;
-                        default:
-                            invalidSymbolAttribute(symbol);
+                        out.write(STO(symbol,program));
                     }
                 }
 
+                out.write(LOJ(program.getSymbols().get(mainOffset),program));
                 out.flush();
 
                 this.preambleBytes = bytes.toByteArray();
@@ -122,56 +155,52 @@ public class CodeBlock {
         }
     }
 
-    public void byteCode(AST node, AbstractSyntaxTree tree) throws IOException{
+    public Instruction byteCode(AST node, int level) throws IOException{
 
+        Instruction myMFR = MFR(node, node,level); //Make frame for the function
+        myMFR.byteCode();
         for (AST child: node.getStatements()){
             switch (child.getAstType().id()){
+                //TODO Handle Builtin Function Loads
                 case "Var":
-                        //Extract the type of the variable
-                        int varSymbolType = Integer.parseInt(child.getValue());
-
-                        //Find the corresponding type symbol
-                        AST startingPoint = node;
-                        Map.Entry<String,int[]> targetTypeSymbol = null;
-
-                        //While
-                        while (targetTypeSymbol == null && //you haven't found the TypeSymbol
-                                startingPoint != null){ //And you still have places to look
-
-                            //Keep looking
-                            targetTypeSymbol = searchScopeForType(varSymbolType, startingPoint);
-                            startingPoint = startingPoint.getParent();
-                        }
-
-                        if (startingPoint == null){ //If the type could not be found
-                            throw new RuntimeException("Could not find type with id " + varSymbolType + " in program scope!");
-                        }
-
-                        //If you're here you you've found the type
-                        //Use the type symbol definition to make a user defined object and push it to the data stack
-                        MOB(targetTypeSymbol, node.getId());
-
-                        //Now store this newly created object in your stack frame at the id described by variable symbol;
-                        STO(varSymbol, node.getId());
-
+                    STO(child, node);
                     break;
                 case "Function":
                     //Recurse through function AST Nodes
-
-                    byteCode(child, tree);
+                    Instruction myMCL = MCL(node);
+                    Instruction childMFR = byteCode(child,level+1);
+                    myMCL.setChildMFR(childMFR);
                     break;
                 case "Int":
-                    INT(Integer.parseInt(child.getValue()), node.getId());
+                    INT(Integer.parseInt(child.getValue()), node);
+                    break;
+                case "String":
+                    STR(Integer.parseInt(child.getValue()),node);
                     break;
                 case "LoadOrCall":
-
+                    LOC(child, node);
+                    break;
+                case "BuiltInCall":
+                    CBI(child, node);
+                    break;
+                case "Load":
+                    LOA(child, node);
+                    break;
+                case "ObjectRead":
+                    RDF(child, node);
+                    break;
+                case "ObjectWrite":
+                    WRF(child, node);
+                    break;
+                case "ObjectCons":
+                    MOB(child, node);
                     break;
             }
         }
 
+        RET(node);//Return from the function
 
-
-
+        return myMFR;
     }
 
     private Map.Entry<String, int[]> searchScopeForType (int typeId, AST searchNode){
@@ -192,50 +221,50 @@ public class CodeBlock {
     /*
         HANDLING LITERAL DATA
      */
-    private byte [] INT (int integerValue, UUID nodeID) throws IOException{
+    private byte [] INT (int integerValue, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.INT);
         i.annotateParameter(integerValue);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] FLT (float floatValue, UUID nodeID) throws IOException{
+    private byte [] FLT (float floatValue, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.FLT);
         i.annotateParameter(floatValue);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] CHR (char characterValue, UUID nodeID) throws IOException{
+    private byte [] CHR (char characterValue, AST nodeID) throws IOException{
         //Error Handling
         String singleCharacter = Character.toString(characterValue);
         ByteCode.fuckUTF8(singleCharacter); //Error Handling
 
         Instruction i = new Instruction(OpCode.CHR);
         i.annotateParameter(singleCharacter.getBytes("UTF-8"));
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] STR (Map.Entry<String,int []> symbol, UUID nodeID) throws IOException{
+    private byte [] STR (int stringOffset, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.STR);
-        i.annotateParameter(symbol.getValue()[3],symbol.getKey(),3);
-        instructionList(nodeID).add(i);
+        i.annotateParameter(stringOffset);
+        instructionList(nodeID,i);
         return i.byteCode();
 
     }
 
-    private byte [] SYM (Map.Entry<String,int []> symbol, UUID nodeID) throws IOException{
+    private byte [] SYM (int stringOffset, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.SYM);
-        i.annotateParameter(symbol.getValue()[3], symbol.getKey(), 3);
-        instructionList(nodeID).add(i);
+        i.annotateParameter(stringOffset);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
     /*
         MANIPULATING FRAMES AND CALLING FUNCTIONS
      */
-    private byte [] MFR (AST node) throws IOException{
+    private Instruction MFR (AST node, AST nodeID, int level) throws IOException{
         //Only variables get slots in the frame being made. User defined objects are handled by the data stack!
         //Data Stack != Frame Slots != Call Stack ....well duh, but I'm pretty sleep deprived, so gonna leave this here.
         int variables = 0;
@@ -248,111 +277,165 @@ public class CodeBlock {
 
         Instruction i = new Instruction(OpCode.MFR);
         i.annotateParameter(variables);
-        instructionList(node.getId()).add(i);
-        return i.byteCode();
+        instructionList(nodeID,i);
+        if(level == 0){
+            topLevelInstructionList(nodeID,i);
+        }
+
+        return i;
     }
 
-    private byte [] STO (Map.Entry<String,int []> symbol, UUID nodeID) throws IOException{
+    private byte [] STO (Map.Entry<String,int []> symbol, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.STO);
         i.annotateParameter(symbol.getValue()[1], symbol.getKey(),1);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] LOA (AST node) throws IOException{
+    private byte [] STO (AST node,AST nodeID) throws IOException{
+        Integer [] data = node.tryValueAsIntegerArray();
+
+        Instruction i = new Instruction(OpCode.STO);
+        i.annotateParameter(data[0],1);
+        instructionList(nodeID,i);
+        return i.byteCode();
+    }
+
+    private byte [] LOA (AST node,AST nodeID) throws IOException{
         Integer [] data = node.tryValueAsIntegerArray();
 
         Instruction i = new Instruction(OpCode.LOA);
         i.annotateParameter(data[0],0);
         i.annotateParameter(data[1], 1);
-        instructionList(node.getId());
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] LOC (AST node) throws IOException{
+    private byte [] LOC (AST node, AST nodeID) throws IOException{
         Integer [] data = node.tryValueAsIntegerArray();
 
         Instruction i = new Instruction(OpCode.LOC);
         i.annotateParameter(data[0],0);
         i.annotateParameter(data[1], 1);
         i.annotateParameter(data[2],2);
-        instructionList(node.getId());
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] LOJ (AST node) throws IOException{
+    private byte [] LOJ (Map.Entry<String,int[]> symbol,AST nodeID) throws IOException{
+        Instruction i = new Instruction(OpCode.LOJ);
+        i.annotateParameter(symbol.getValue()[0],symbol.getKey(),0);
+        i.annotateParameter(symbol.getValue()[1],symbol.getKey(),1);
+        i.annotateParameter(symbol.getValue()[2],symbol.getKey(),2);
+        instructionList(nodeID,i);
+        return i.byteCode();
+    }
+
+    private byte [] LOJ (AST node,AST nodeID) throws IOException{
         Integer [] data = node.tryValueAsIntegerArray();
 
         Instruction i = new Instruction(OpCode.LOJ);
         i.annotateParameter(data[0],0);
         i.annotateParameter(data[1], 1);
         i.annotateParameter(data[2], 2);
-        instructionList(node.getId());
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] RET (UUID nodeID) throws IOException{
+    private byte [] RET (AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.RET);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
     /*
         CREATING FUNCTION CLOSURES
      */
-    private byte [] MCL (int functionAddress, UUID nodeID) throws IOException {
+    //Puts a blank MCL instruction in the list
+    private Instruction MCL (AST nodeID) throws IOException {
         Instruction i = new Instruction(OpCode.MCL);
-        i.annotateParameter(functionAddress);
-        instructionList(nodeID).add(i);
-        return i.byteCode();
+        instructionList(nodeID,i);
+        return i;
     }
 
     /*
         ACCESSING BUILT-IN FUNCTIONS
      */
-    private byte [] CBI (AST node) throws IOException{
+    private byte [] CBI (AST node,AST nodeID) throws IOException{
         Integer [] data = node.tryValueAsIntegerArray();
 
         Instruction i = new Instruction(OpCode.CBI);
         i.annotateParameter(data[0],0);
-        instructionList(node.getId());
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] LBI (AST node) throws IOException{
+    private byte [] LBI (AST node,AST nodeID) throws IOException{
         Integer [] data = node.tryValueAsIntegerArray();
 
         Instruction i = new Instruction(OpCode.LBI);
         i.annotateParameter(data[0],0);
-        instructionList(node.getId());
+        instructionList(nodeID,i);
         return i.byteCode();
     }
     /*
         MANIPULATING USER-DEFINED TYPES
      */
-    private byte [] MOB (Map.Entry<String, int[]> symbol, UUID nodeID) throws IOException{
+    private byte [] MOB (Map.Entry<String,int[]> symbol, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.MOB);
-        i.annotateParameter(symbol.getValue()[1], symbol.getKey(),1);
-        i.annotateParameter(symbol.getValue()[2],symbol.getKey(), 2);
-        instructionList(nodeID);
+        i.annotateParameter(symbol.getValue()[1],symbol.getKey(),1);
+        i.annotateParameter(symbol.getValue()[2],symbol.getKey(),2);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] RDF (Map.Entry<String,int[]> symbol, UUID nodeID) throws IOException{
+    private byte [] MOB (AST node,AST nodeID) throws IOException{
+        Integer [] data = node.tryValueAsIntegerArray();
+
+        Instruction i = new Instruction(OpCode.MOB);
+        i.annotateParameter(data[0],0);
+        i.annotateParameter(data[1],1);
+        instructionList(nodeID,i);
+        return i.byteCode();
+    }
+
+    private byte [] RDF (Map.Entry<String,int[]> symbol, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.RDF);
         i.annotateParameter(symbol.getValue()[1],symbol.getKey(),1);
         i.annotateParameter(symbol.getValue()[2],symbol.getKey(),2);
         i.annotateParameter(symbol.getValue()[3],symbol.getKey(),3);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
-    private byte [] WRF (Map.Entry<String, int[]> symbol, UUID nodeID) throws IOException{
+    private byte [] RDF (AST node,AST nodeID) throws IOException{
+        Integer [] data = node.tryValueAsIntegerArray();
+
+        Instruction i = new Instruction(OpCode.RDF);
+        i.annotateParameter(data[0],0);
+        i.annotateParameter(data[1],1);
+        i.annotateParameter(data[2],2);
+        instructionList(nodeID,i);
+        return i.byteCode();
+    }
+
+    private byte [] WRF (Map.Entry<String,int[]> symbol, AST nodeID) throws IOException{
         Instruction i = new Instruction(OpCode.WRF);
         i.annotateParameter(symbol.getValue()[1],symbol.getKey(),1);
         i.annotateParameter(symbol.getValue()[2],symbol.getKey(),2);
         i.annotateParameter(symbol.getValue()[3],symbol.getKey(),3);
-        instructionList(nodeID).add(i);
+        instructionList(nodeID,i);
+        return i.byteCode();
+    }
+
+    private byte [] WRF (AST node,AST nodeID) throws IOException{
+        Integer [] data = node.tryValueAsIntegerArray();
+
+        Instruction i = new Instruction(OpCode.WRF);
+        i.annotateParameter(data[0],0);
+        i.annotateParameter(data[1],1);
+        i.annotateParameter(data[2],2);
+        instructionList(nodeID,i);
         return i.byteCode();
     }
 
@@ -364,26 +447,9 @@ public class CodeBlock {
         result += OpCode.LOJ.size();    //Account for LOJ at the end of preamble
 
         for (Map.Entry<String, int[]> symbol: program.getSymbols()){
-            switch (symbol.getValue()[0]){
-                //Variable
-                case 0:
-                    result += OpCode.MCL.size();
-                    result += OpCode.STO.size();
-                    break;
-                //Type
-                case 1:
-                    result += OpCode.MOB.size();
-                    break;
-                //Field Read
-                case 2:
-                    result += OpCode.RDF.size();
-                    break;
-                //Field Write
-                case 3:
-                    result += OpCode.WRF.size();
-                    break;
-                default:
-                    invalidSymbolAttribute(symbol);
+            if (symbol.getValue()[0] == 0){
+                result += OpCode.MCL.size();
+                result += OpCode.STO.size();
             }
         }
 
@@ -406,16 +472,62 @@ public class CodeBlock {
     /*
         ANNOTATION UTILS
      */
-    private ArrayList instructionList(UUID nodeId){
+    private void instructionList(AST node, Instruction i){
+        if (node.getAstType() == ASTType.Program){
+            if (annotatedPreambleInstructions.size() == 0){
+                NodeInstructions preabmle = new NodeInstructions(node);
+                annotatedPreambleInstructions.add(preabmle);
+            }
 
-        if (annotatedInstructions.containsKey(nodeId)){
-            return annotatedInstructions.get(nodeId);
-        }else{
-            annotatedInstructions.put(nodeId, new ArrayList<Instruction>());
-            return annotatedInstructions.get(nodeId);
+            annotatedPreambleInstructions.get(0).getInstructions().add(i);
+
+            return;
         }
 
+        boolean added = false;
+
+        for (NodeInstructions instructions: annotatedInstructions){
+            if (instructions.getNode().getId().equals(node.getId())){
+
+                instructions.getInstructions().add(i);
+                added = true;
+            }
+        }
+
+        if (!added){
+            NodeInstructions newInstructions = new NodeInstructions(node);
+            annotatedInstructions.add(newInstructions);
+            newInstructions.getInstructions().add(i);
+        }
+
+
     }
+
+    private NodeInstructions nodeInstructions(AST node){
+        for (NodeInstructions instructions: annotatedInstructions){
+            if (instructions.getNode().getId().equals(node.getId())){
+                return instructions;
+            }
+        }
+
+        return null;
+    }
+
+    private void topLevelInstructionList(AST node, Instruction i){
+
+        NodeInstructions topLevel = new NodeInstructions(node);
+        topLevel.getInstructions().add(i);
+        annotatedTopLevelInstructions.add(topLevel);
+
+        return;
+
+    }
+
+
+    public byte[] getRawBytes(){
+        return blockBytes;
+    }
+
 
 
 }

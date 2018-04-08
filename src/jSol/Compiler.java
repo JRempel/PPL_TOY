@@ -2,7 +2,7 @@ package jSol;
 
 public class Compiler {
     public static void main(String[] args) {
-        compile("./vector.txt");
+        compile("./closures.toy");
     }
 
     private static void compile(String path) {

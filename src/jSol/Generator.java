@@ -18,7 +18,7 @@ public class Generator {
         root.addString("go");
         root.addString("vector_len");
         root.addString("main");
-        root.addString("len(3,4)=");
+        root.addString("len(3,4) = ");
         //Types
         ArrayList<String> members = new ArrayList<String>();
         members.add("x");
@@ -162,7 +162,7 @@ public class Generator {
         n020.addStatement(n028);
 
         AST n029 = new AST(ASTType.BuiltInCall);
-        n029.setValue("14");
+        n029.setValue("64");
         n020.addStatement(n029);
 
         AST n030 = new AST(ASTType.LoadOrCall);
