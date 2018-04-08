@@ -74,7 +74,7 @@ public class ByteCode {
     public static void fuckUTF8(String s) {
         for (char c : s.toCharArray()) {
             if (Character.compare('\u007F', c) < 0) {
-                throw new RuntimeException("Respectfully, you and your UTF-8 characters can fellate a collection of phalluses :)");
+                throw new RuntimeException("NO unicode please...");
             }
         }
     }
