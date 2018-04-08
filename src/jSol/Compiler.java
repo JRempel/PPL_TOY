@@ -5,7 +5,8 @@ public class Compiler {
     private static String byteCodeType = ".byte";
 
     public static void main(String[] args) {
-        compile("vector.toy");
+        // TODO : validate args
+        compile("fib.toy");
     }
 
     private static void compile(String path) {

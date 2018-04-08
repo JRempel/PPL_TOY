@@ -147,39 +147,54 @@ public class CodeBlock {
         var myMFR = MFR(node, node, level); //Make frame for the function
         myMFR.byteCode();
         for (var child : node.getStatements()) {
-            switch (child.getAstType().id()) {
+            switch (child.getAstType()) {
                 //TODO Handle Builtin Function Loads
-                case "Var":
+                case Var:
                     STO(child, node);
                     break;
-                case "Function":
+                case Function:
                     //Recurse through function AST Nodes
                     var myMCL = MCL(node);
                     var childMFR = byteCode(child, level + 1);
                     myMCL.setChildMFR(childMFR);
                     break;
-                case "Int":
+                case Lambda:
+                    var mcl = MCL(node);
+                    var lambdaChild = byteCode(child, level + 1);
+                    mcl.setChildMFR(lambdaChild);
+                    break;
+                case Int:
                     INT(Integer.parseInt(child.getValue()), node);
                     break;
-                case "String":
+                case Float:
+                    FLT(Float.parseFloat(child.getValue()), node);
+                    break;
+                case String:
                     STR(Integer.parseInt(child.getValue()), node);
                     break;
-                case "LoadOrCall":
+                case Char:
+                    CHR(node.getValue().charAt(0), node);
+                    break;
+                    // TODO: Fix AST Symbol secondPassVal first...
+//                case Symbol:
+//                    SYM(node.getSecondPassVal()[2], node);
+//                    break;
+                case LoadOrCall:
                     LOC(child, node);
                     break;
-                case "BuiltInCall":
+                case BuiltInCall:
                     CBI(child, node);
                     break;
-                case "Load":
+                case Load:
                     LOA(child, node);
                     break;
-                case "ObjectRead":
+                case ObjectRead:
                     RDF(child, node);
                     break;
-                case "ObjectWrite":
+                case ObjectWrite:
                     WRF(child, node);
                     break;
-                case "ObjectCons":
+                case ObjectCons:
                     MOB(child, node);
                     break;
             }
