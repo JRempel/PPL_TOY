@@ -396,11 +396,11 @@ public class AbstractSyntaxTree {
     }
 
     public AbstractSyntaxTree secondPass() {
-        secondPass(this.root, new ArrayList<>(), this.getTypes(), new ArrayList<>());
+        secondPass(this.root, new ArrayList<>(), this.getTypes(), new ArrayList<>(), this.getStrings());
         return this;
     }
 
-    private static void secondPass(AST node, List<List<Map.Entry<String, int[]>>> symbolScopes, List<Map.Entry<String, List<String>>> types, List<String> varsInScope) {
+    private static void secondPass(AST node, List<List<Map.Entry<String, int[]>>> symbolScopes, List<Map.Entry<String, List<String>>> types, List<String> varsInScope, List<String> stringTable) {
         // Add current-node symbol scope
         var currScope = new ArrayList<>(node.getSymbols());
         if (node.getAstType() == ASTType.Function || node.getAstType() == ASTType.Lambda || node.getAstType() == ASTType.Program) {
@@ -418,7 +418,6 @@ public class AbstractSyntaxTree {
                 case Program:
                 case Function:
                 case Lambda:
-                case Symbol:
                 case Int:
                 case Char:
                 case Float:
@@ -527,13 +526,17 @@ public class AbstractSyntaxTree {
                     }
                     break type;
                 }
+                case Symbol: {
+                    node.setSecondPassVal(new int[]{Integer.parseInt(node.getValue())});
+                    break type;
+                }
                 default:
                     throw new RuntimeException("Compiler error - invalid use in AST: " + node.getAstType() + " " + node.getValue());
             }
         }
 
         for (var child : node.getStatements()) {
-            secondPass(child, symbolScopes, types, varsInScope);
+            secondPass(child, symbolScopes, types, varsInScope, stringTable);
             if (child.getAstType() == Var) {
                 varsInScope.add(child.getValue());
             }

@@ -173,12 +173,11 @@ public class CodeBlock {
                     STR(Integer.parseInt(child.getValue()), node);
                     break;
                 case Char:
-                    CHR(node.getValue().charAt(0), node);
+                    CHR(child.getValue().charAt(0), node);
                     break;
-                    // TODO: Fix AST Symbol secondPassVal first...
-//                case Symbol:
-//                    SYM(node.getSecondPassVal()[2], node);
-//                    break;
+                case Symbol:
+                    SYM(child.getSecondPassVal()[0], node);
+                    break;
                 case LoadOrCall:
                     LOC(child, node);
                     break;
