@@ -131,8 +131,9 @@ public class AbstractSyntaxTree {
                                     tempValue[2] = typeFields;
                                     tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                                 }
-                                typeFields += (tempValue[0] == 2) ? 1 : 0;
+                                // TODO: SWAPPED THESE TWO VALUES... NO DIFF???
                                 typeAST.addSymbol(tempSymbol.getKey(), tempValue);
+                                typeFields += (tempValue[0] == 2) ? 1 : 0;
                             }
                             for (int i = 0; i < typeTable.size(); i++) {
                                 if (typeTable.get(i).getKey().equals(tempType.getKey())) {
@@ -173,7 +174,7 @@ public class AbstractSyntaxTree {
                     paramUpdate[2] = numTypeParam;
                     tempType.setValue(paramUpdate);
                     typeAST.addSymbol(tempType.getKey(), tempType.getValue());
-                    int typeFields = 0;
+                    int typeFields = -1;
                     var paramList = new ArrayList<String>();
                     for (var tempSymbol : tempSymbolListAfterTempType) {
                         var tempValue = tempSymbol.getValue();
@@ -190,8 +191,10 @@ public class AbstractSyntaxTree {
                             tempValue[2] = typeFields;
                             tempValue[3] = stringTable.indexOf(tempSymbol.getKey());
                         }
-                        typeFields += (tempValue[0] == 2) ? 1 : 0;
+
+                        // TODO: SWAPPED THESE TWO VALUES... NO DIFF???
                         typeAST.addSymbol(tempSymbol.getKey(), tempValue);
+                        typeFields += (tempValue[0] == 2) ? 1 : 0;
                     }
                     for (int i = 0; i < typeTable.size(); i++) {
                         if (typeTable.get(i).getKey().equals(tempType.getKey())) {
